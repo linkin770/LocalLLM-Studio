@@ -51,6 +51,8 @@ function App() {
     setModelInfo,
     setModelInfoOpen,
     setBusy,
+    setKnowledgeDocuments,
+    setKnowledgeEnabled,
   } = useAppState();
 
   const [renameState, setRenameState] = useState<{ open: boolean; sessionId: string; title: string; value: string } | null>(null)
@@ -138,16 +140,18 @@ function App() {
   }, [setBusy, patchFromBackend, setToast]);
 
   // 重启 llama-server 服务（先停止再启动）
-  const restartServer = useCallback(async () => {
+  const restartServer = useCallback(async (overrideConfig?: Config) => {
     isRestartingForModelSwitch.current = true // 标记正在为模型切换重启
     setBusy(true);
     try {
+      // 优先使用传入的 config（如模型切换时），否则使用当前 state.config
+      const configToUse = overrideConfig || state.config
       // 先停止当前服务
       await window.llamaDesktop.stopServer();
       // 等待一小段时间确保服务完全停止
       await new Promise(resolve => setTimeout(resolve, 500));
       // 使用新配置重新启动
-      const result = await window.llamaDesktop.startServer({ config: state.config });
+      const result = await window.llamaDesktop.startServer({ config: configToUse });
       patchFromBackend({
         config: result.config,
         validation: result.validation,
@@ -284,17 +288,18 @@ function App() {
     
     // 如果启用了知识库，检索相关内容并注入
     let knowledgeContext = '';
-    if (state.knowledgeEnabled && state.knowledgeDocuments.some(d => d.status === 'ready')) {
+    const knowledgeEnabled = Boolean(state.config?.knowledgeEnabled)
+    if (knowledgeEnabled && state.knowledgeDocuments.some(d => d.status === 'ready')) {
       try {
         const searchResult = await window.llamaDesktop.searchKnowledge(content, { topK: 3 })
         if (searchResult.results && searchResult.results.length > 0) {
-          knowledgeContext = '\n\n【知识库参考】\n' + 
-            searchResult.results.map((r, idx) => 
-              `来源：${r.chunk.documentName}\n${r.chunk.content}`
+          knowledgeContext = '\n\n【知识库参考】\n' +
+            searchResult.results.map((r, idx) =>
+              `[${idx + 1}] 来源：${r.chunk.documentName}\n${r.chunk.content}`
             ).join('\n\n---\n\n')
         }
       } catch (error) {
-        console.error('知识库检索失败:', error)
+        console.error('[知识库] 检索失败:', error)
       }
     }
     // 创建用户消息
@@ -701,6 +706,16 @@ function App() {
         catch (backendError) {
           console.warn('Failed to get state from backend:', backendError);
         }
+        // 拉取知识库文档
+        try {
+          const docsResult = await window.llamaDesktop.listDocuments();
+          if (docsResult && Array.isArray(docsResult.documents)) {
+            setKnowledgeDocuments(docsResult.documents);
+          }
+        }
+        catch (kbError) {
+          console.warn('Failed to list knowledge documents:', kbError);
+        }
       }
       catch (error) {
         console.error('Init failed:', error);
@@ -825,7 +840,24 @@ function App() {
         {state.view === 'terminal' ? (
           <TerminalPanel logs={state.logs} onReturnChat={() => setView('chat')}/>
         ) : state.view === 'knowledge' ? (
-          <KnowledgeBasePanel onReturnChat={() => setView('chat')}/>
+          <KnowledgeBasePanel
+            onReturnChat={() => setView('chat')}
+            enabled={Boolean(state.config?.knowledgeEnabled)}
+            onToggleEnabled={async (v) => {
+              updateConfig('knowledgeEnabled', v)
+              // 立即持久化
+              try {
+                const next = { ...(state.config || {}), knowledgeEnabled: v }
+                const result = await window.llamaDesktop.saveConfig({ config: next })
+                if (result.config) {
+                  patchFromBackend({ config: result.config })
+                }
+              } catch (err) {
+                console.error('保存知识库开关失败:', err)
+              }
+            }}
+            onDocumentsChange={(docs) => setKnowledgeDocuments(docs)}
+          />
         ) : (
           <ChatScreen 
             chatMessages={state.chatMessages} 

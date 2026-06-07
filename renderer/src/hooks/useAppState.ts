@@ -447,8 +447,8 @@ export function useAppState() {
     setState(prev => ({ ...prev, streamRequestId: id }))
   }, [])
 
-  // 切换视图（聊天/终端）
-  const setView = useCallback((view: 'chat' | 'terminal') => {
+  // 切换视图（聊天/终端/知识库）
+  const setView = useCallback((view: 'chat' | 'terminal' | 'knowledge') => {
     setState(prev => ({ ...prev, view }))
   }, [])
 

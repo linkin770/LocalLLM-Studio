@@ -3,13 +3,29 @@
  */
 
 /**
- * 分词函数（简易版，按空格和标点分割）
+ * 分词函数（支持中文双字切分 + 英文/数字单词）
+ * @param {string} text
+ * @returns {string[]}
  */
 function tokenize(text) {
-  return text
-    .toLowerCase()
-    .split(/[\s\u3000,，.。!！?？;；:：""''""''()（）\[\]【】]+/)
-    .filter(token => token.length > 0)
+  if (!text) return []
+  const normalized = text.toLowerCase()
+  // 1. 提取连续的英文/数字/中文字符作为整体片段
+  const segments = normalized.match(/[a-z0-9]+|[\u4e00-\u9fa5]+/g) || []
+  const tokens = []
+  for (const seg of segments) {
+    if (/^[a-z0-9]+$/.test(seg)) {
+      // 英文/数字：保留原词
+      tokens.push(seg)
+    } else {
+      // 中文：保留整词 + 双字切分（bigram）
+      if (seg.length > 1) tokens.push(seg)
+      for (let i = 0; i < seg.length - 1; i++) {
+        tokens.push(seg.slice(i, i + 2))
+      }
+    }
+  }
+  return tokens.filter(t => t.length > 0)
 }
 
 /**

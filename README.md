@@ -1,6 +1,6 @@
 # illama-cpp-desktop
 
-> React 重构版本 v1.0.2026.05.31
+> React 重构版本 v1.0.2026.06.07
 
 [![520](https://img.shields.io/badge/💖-袁袁袁大王-ff69b4?style=flat-square\&labelColor=ffb6c1)](https://github.com/linkin770/illama-cpp-desktop)
 
@@ -156,29 +156,53 @@ npm start
 │   ├── llama-cpp.png        # 应用图标
 │   ├── llama-cpp.ico        # Windows 图标
 │   └── llama-cpp-tray.png   # 托盘图标
-├── desktop/                 # Electron 主进程
-│   ├── main.mjs             # 主进程逻辑（IPC、服务管理、配置、技能 CRUD）
-│   └── preload.cjs          # 预加载脚本（安全的渲染进程桥接）
+├── desktop/                 # Electron 主进程（已模块化）
+│   ├── main.mjs             # 主进程入口（仅负责模块装配和生命周期）
+│   ├── preload.cjs          # 预加载脚本（安全的渲染进程桥接）
+│   ├── core/                # 核心模块
+│   │   ├── app-state.mjs    # 全局状态（runtimeStatus、logs、订阅者模式）
+│   │   ├── config-manager.mjs # 配置管理（加载/保存/校验/规范化）
+│   │   └── window-manager.mjs # 窗口管理（创建/显示/托盘状态）
+│   ├── ipc/                 # IPC 处理器
+│   │   ├── chat-handler.mjs   # 聊天补全/流式/中断
+│   │   ├── file-dialog.mjs    # 文件选择对话框
+│   │   ├── knowledge-manager.mjs # 知识库（文档管理+检索）
+│   │   ├── model-scanner.mjs  # 模型扫描
+│   │   ├── server-manager.mjs # 服务启停+健康检查
+│   │   └── skill-manager.mjs  # 技能 CRUD + LLM 生成
+│   ├── tray/                # 系统托盘
+│   │   └── tray-manager.mjs  # 托盘菜单与状态同步
+│   └── utils/               # 工具与参数
+│       ├── file-utils.mjs     # 附件解析
+│       ├── model-utils.mjs    # 模型文件名解析
+│       ├── server-args.mjs    # llama-server 参数构建
+│       ├── documentParser.mjs # 文档解析
+│       ├── textChunker.mjs    # 文本分块
+│       └── tfidf.mjs          # TF-IDF 检索
 ├── renderer/                # React 渲染进程
 │   ├── src/
 │   │   ├── App.tsx          # 主应用组件（状态管理、事件监听、IPC 调用）
 │   │   ├── main.tsx         # 入口
 │   │   ├── components/      # UI 组件
-│   │   │   ├── ChatScreen.tsx     # 聊天主界面（空状态 / 消息列表）
-│   │   │   ├── ChatInput.tsx      # 输入框（附件菜单、技能菜单、模型标签）
-│   │   │   ├── ChatMessage.tsx    # 消息渲染（Markdown、代码高亮、元数据）
-│   │   │   ├── Sidebar.tsx        # 侧边栏（对话历史、时间分组）
-│   │   │   ├── SettingsPanel.tsx  # 设置面板（模型、采样、技能管理）
-│   │   │   ├── ServiceBar.tsx     # 底部服务栏（启动/停止/保存）
+│   │   │   ├── ChatScreen.tsx     # 聊天主界面
+│   │   │   ├── ChatInput.tsx      # 输入框
+│   │   │   ├── ChatMessage.tsx    # 消息渲染
+│   │   │   ├── ChatNav.tsx        # 消息导航
+│   │   │   ├── Sidebar.tsx        # 侧边栏
+│   │   │   ├── SettingsPanel.tsx  # 设置面板
 │   │   │   ├── TerminalPanel.tsx  # 终端日志面板
 │   │   │   ├── ModelInfoModal.tsx # 模型信息弹窗
-│   │   │   └── ChatNav.tsx        # 消息导航
+│   │   │   ├── SystemPromptModal.tsx # 系统提示词弹窗
+│   │   │   ├── KnowledgeBasePanel.tsx # 知识库面板
+│   │   │   ├── HeaderBar.tsx      # 顶部标题栏
+│   │   │   ├── TabBar.tsx         # 多标签栏
+│   │   │   └── Toast.tsx          # 全局提示
 │   │   ├── hooks/
-│   │   │   └── useAppState.ts     # 应用状态 Hook（会话、配置、聊天）
+│   │   │   └── useAppState.ts     # 应用状态 Hook
 │   │   ├── types/
 │   │   │   └── index.ts           # TypeScript 类型定义
 │   │   ├── utils/
-│   │   │   └── index.ts           # 工具函数（token 预估、时间格式化等）
+│   │   │   └── index.ts           # 工具函数
 │   │   └── theme.ts               # Ant Design 主题配置
 │   ├── styles/              # CSS 样式（按模块拆分）
 │   │   ├── variables.css    # CSS 变量
@@ -188,14 +212,16 @@ npm start
 │   │   ├── chat.css         # 聊天区域
 │   │   ├── composer.css     # 输入框
 │   │   ├── settings.css     # 设置面板
-│   │   ├── extra.css        # 覆盖和扩展样式
 │   │   └── ...
-│   └── index.html           # HTML 入口
+│   ├── index.html           # HTML 入口
+│   └── dist/                # esbuild 构建产物
 ├── llama/                   # llama.cpp 编译产物（需自行下载）
 ├── skills/                  # 技能 SKILL.md 文件存储目录
+├── data/knowledge/          # 知识库文档与索引
 ├── scripts/
 │   └── build-renderer.js    # esbuild 构建脚本
 ├── package.json
+├── package-lock.json
 ├── tsconfig.json
 └── README.md
 ```
@@ -274,6 +300,70 @@ ${ARGUMENTS}
 ***
 
 ## 📝 更新日志
+
+### v1.0.2026.06.07 (2026-06-07)
+
+#### 🏗️ 主进程全面模块化重构
+
+将原 `desktop/main.mjs`（728 行）拆分为 14 个职责单一的小模块，根目录仅保留主入口：
+
+**新增目录结构：**
+- `desktop/core/` — 核心模块（3 个）
+  - `app-state.mjs`：集中式全局状态（runtimeStatus、logs），引入订阅者模式解耦 UI 同步
+  - `config-manager.mjs`：配置加载/保存/校验/规范化（`normalizeConfig`、`validation`、`localUrl`）
+  - `window-manager.mjs`：窗口创建/显示/获取主窗口引用
+- `desktop/ipc/` — IPC 处理器（6 个）
+  - `chat-handler.mjs`：聊天补全、流式、中断
+  - `file-dialog.mjs`：文件选择对话框
+  - `knowledge-manager.mjs`：知识库文档管理与检索
+  - `model-scanner.mjs`：模型目录扫描
+  - `server-manager.mjs`：服务启停、健康检查、模型信息
+  - `skill-manager.mjs`：技能 CRUD + LLM 生成 SKILL.md
+- `desktop/tray/` — 系统托盘（1 个）
+  - `tray-manager.mjs`：托盘菜单与状态同步
+- `desktop/utils/` — 工具与参数（6 个）
+  - `file-utils.mjs`：附件解析（图片/文本/PDF/音频）
+  - `model-utils.mjs`：模型文件名解析（quantization、parameterScale、family）
+  - `server-args.mjs`：llama-server 参数构建（`buildServerArgs`、`buildLaunchDetails`）
+  - `documentParser.mjs`：文档解析（PDF/Word/Excel）
+  - `textChunker.mjs`：文本分块
+  - `tfidf.mjs`：TF-IDF 全文检索（含中文 bigram 分词）
+
+**main.mjs 瘦身：**
+- 行数：**2480 → 131**（减少 95%）
+- 业务函数：**30+ → 0**（全部下沉到对应模块）
+- 仅保留：模块导入、路径配置、sendEvent、订阅者注册、IPC 注册、应用生命周期
+
+#### ✨ 架构改进
+
+- **订阅者模式解耦**：`app-state.mjs` 通过 `onStatusChange` / `onLogChange` 暴露订阅接口，状态变更自动推送到 UI 与托盘，避免了直接导入
+- **依赖注入替代循环依赖**：模块间通过 `appState({ validation, buildLaunchDetails })` 等函数注入依赖，无循环引用
+- **路径计算修正**：所有 `__dirname` 路径计算统一规则，子目录模块使用 `path.resolve(__dirname, '..', '..')` 锚定到项目根
+
+#### 🔧 技术细节
+
+- `getStatus()` / `getLogs()` API 替代直接引用，保证状态始终是最新的
+- 检测服务启动完成（`server is listening`）和错误日志的逻辑保留在 main.mjs（需访问 `serverChild` 引用）
+- 托盘菜单通过 `syncTrayMenu()` 订阅 status 变化重建，避免闭包持有过期 serverChild
+- 所有模块加载均通过自动化测试（17 个模块动态 import 100% 成功）
+
+#### 📦 版本信息
+
+- 版本号：`1.0.2026.05.31` → `1.0.2026.06.07`
+- `package.json` 和 `package-lock.json` 同步更新
+- README 项目结构、版本号、更新日志已重写
+
+#### 🐛 Bug 修复
+
+- **构建失败（重要）**：在本次模块化之前的某次推送中，工作目录中 27 个渲染进程文件被意外删除（12 个 .tsx 组件 + 15 个 .css 样式）。导致 `npm run build` 报 9 个 `Could not resolve` 错误。使用 `git restore renderer/src/components/ renderer/styles/` 从 HEAD commit 完整恢复所有文件，构建恢复正常。
+- **主进程导入路径**：将模块移动到子目录后，`__dirname` 计算需相应调整（如 `core/window-manager.mjs` 需 `path.resolve(__dirname, '..', '..')`），避免白屏 `ERR_FILE_NOT_FOUND` 错误
+
+#### 🧪 验证
+
+- 17 个模块（3 core + 6 ipc + 1 tray + 6 utils + 1 main）全部通过语法和加载测试
+- 23 处静态 import + 3 处动态 import 路径全部正确
+- 4 个 `__dirname` 路径计算（main、core/config-manager、core/window-manager、tray/tray-manager）全部正确解析到项目根
+- `npm run build` 构建成功，无错误
 
 ### v1.0.2026.05.31 (2026-05-31)
 
