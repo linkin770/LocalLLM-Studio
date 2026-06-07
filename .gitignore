@@ -37,3 +37,6 @@ MiSans_Latin.zip
 Thumbs.db
 .vscode/
 .idea/
+
+# AI tooling metadata (qwen project structure extraction)
+.qoder/
