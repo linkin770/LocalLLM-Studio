@@ -733,31 +733,86 @@
   <div class="specs-block">
     <h3 class="specs-block-title">系统要求</h3>
     <p class="specs-block-sub">运行本语 / LocalLLM Studio 所需的最低与建议配置</p>
-    <dl class="specs-list">
-      <div class="specs-row"><dt>操作系统</dt><dd>Windows 10 / 11 (64 位)</dd></div>
-      <div class="specs-row"><dt>Node.js</dt><dd>&gt;= 18.0.0</dd></div>
-      <div class="specs-row"><dt>内存</dt><dd>建议 &gt;= 16 GB（视模型大小而定）</dd></div>
-      <div class="specs-row"><dt>GPU</dt><dd>可选，支持 CUDA / Vulkan 加速</dd></div>
-      <div class="specs-row"><dt>平台支持</dt><dd>Windows 10 / 11</dd></div>
-      <div class="specs-row"><dt>License</dt><dd>MIT</dd></div>
-    </dl>
+    <div class="specs-grid">
+      <div class="spec-card">
+        <div class="spec-card-name">操作系统</div>
+        <div class="spec-card-ver">Windows 10 / 11 (64 位)</div>
+        <div class="spec-card-note">桌面运行平台</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">Node.js</div>
+        <div class="spec-card-ver">&gt;= 18.0.0</div>
+        <div class="spec-card-note">运行时环境</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">内存</div>
+        <div class="spec-card-ver">&gt;= 16 GB</div>
+        <div class="spec-card-note">视模型大小而定</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">GPU</div>
+        <div class="spec-card-ver">可选</div>
+        <div class="spec-card-note">支持 CUDA / Vulkan 加速</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">平台支持</div>
+        <div class="spec-card-ver">Windows 10 / 11</div>
+        <div class="spec-card-note">与操作系统一致</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">License</div>
+        <div class="spec-card-ver">MIT</div>
+        <div class="spec-card-note">开源协议</div>
+      </div>
+    </div>
   </div>
 
   <!-- 运行参数 -->
   <div class="specs-block">
     <h3 class="specs-block-title">运行参数</h3>
     <p class="specs-block-sub">llama-server 关键参数默认值，可在「采样与惩罚」「开发者」面板调整</p>
-    <dl class="specs-list">
-      <div class="specs-row"><dt>host</dt><dd>0.0.0.0</dd></div>
-      <div class="specs-row"><dt>port</dt><dd>8080</dd></div>
-      <div class="specs-row"><dt>ctx_size</dt><dd>32768</dd></div>
-      <div class="specs-row"><dt>n_predict</dt><dd>-1（不限制）</dd></div>
-      <div class="specs-row"><dt>n_gpu_layers</dt><dd>99（尽量卸载到 GPU）</dd></div>
-      <div class="specs-row"><dt>temp</dt><dd>0.8</dd></div>
-      <div class="specs-row"><dt>top_p</dt><dd>0.95</dd></div>
-      <div class="specs-row"><dt>top_k</dt><dd>20</dd></div>
-      <div class="specs-row"><dt>mmproj</dt><dd>—（可选，视觉投影）</dd></div>
-    </dl>
+    <div class="specs-grid">
+      <div class="spec-card">
+        <div class="spec-card-name">host</div>
+        <div class="spec-card-ver">0.0.0.0</div>
+        <div class="spec-card-note">监听地址</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">port</div>
+        <div class="spec-card-ver">8080</div>
+        <div class="spec-card-note">服务端口</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">ctx_size</div>
+        <div class="spec-card-ver">32768</div>
+        <div class="spec-card-note">上下文长度</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">n_predict</div>
+        <div class="spec-card-ver">-1</div>
+        <div class="spec-card-note">不限制最大生成 token</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">n_gpu_layers</div>
+        <div class="spec-card-ver">99</div>
+        <div class="spec-card-note">尽量卸载到 GPU</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">temp</div>
+        <div class="spec-card-ver">0.8</div>
+        <div class="spec-card-note">采样温度</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">top_p</div>
+        <div class="spec-card-ver">0.95</div>
+        <div class="spec-card-note">核采样阈值</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">top_k</div>
+        <div class="spec-card-ver">20</div>
+        <div class="spec-card-note">候选 token 数</div>
+      </div>
+    </div>
   </div>
 
   <!-- 开发命令 -->
