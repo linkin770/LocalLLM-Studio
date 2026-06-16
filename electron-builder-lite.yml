@@ -7,23 +7,12 @@ files:
   - desktop/**
   - renderer/**
   - package.json
-extraResources:
-  - from: llama
-    to: llama
-  - from: models
-    to: models
-  - from: data
-    to: data
-  - from: skills
-    to: skills
 win:
   icon: assets/LocalLLM.ico
   target:
-    - target: zip
-      arch: [x64]
     - target: nsis
       arch: [x64]
-  artifactName: LocalLLM-Studio-v${version}-full.${ext}
+  artifactName: LocalLLM-Studio-v${version}-lite.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true

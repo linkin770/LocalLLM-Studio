@@ -14,7 +14,10 @@ import { fileURLToPath } from 'node:url'
 // ============ 路径配置 ============
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const rootDir = path.resolve(__dirname, '..', '..')   // 项目根目录（core/ 的上两级）
+const isPackaged = app.isPackaged
+const rootDir = isPackaged
+  ? process.resourcesPath                 // 打包后：resources/（extraResources 在这里）
+  : path.resolve(__dirname, '..', '..')   // 开发：项目根目录（core/ 的上两级）
 const llamaDir = path.join(rootDir, 'llama')
 const authoredServerPath = path.join(llamaDir, 'llama-server.exe')
 const authoredServerDir = llamaDir

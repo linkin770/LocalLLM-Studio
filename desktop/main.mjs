@@ -29,7 +29,10 @@ import { registerServerHandlers, getServerChild, setStoppingServer, taskkill } f
 // ============ 路径配置 ============
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const rootDir = path.resolve(__dirname, '..')           // 项目根目录
+const rootDir = path.resolve(__dirname, '..')           // ASAR 内：renderer, assets, desktop
+const extraRootDir = app.isPackaged
+  ? process.resourcesPath          // 打包后：resources/（extraResources 在这里）
+  : rootDir                        // 开发：都是项目根目录
 const preloadPath = path.join(__dirname, 'preload.cjs') // Preload 脚本路径
 const rendererPath = path.join(rootDir, 'renderer', 'index.html') // 渲染进程 HTML
 const iconPath = path.join(rootDir, 'assets', 'LocalLLM.ico')   // 应用图标
@@ -114,13 +117,13 @@ function registerIpc() {
   registerWindowIpc(ipcMain)
 
   // 注册技能管理 IPC
-  registerSkillHandlers(ipcMain, rootDir, addLog, getStatus(), loadConfig)
+  registerSkillHandlers(ipcMain, extraRootDir, addLog, getStatus(), loadConfig)
 
   // 注册模型扫描 IPC
-  registerModelScannerHandlers(ipcMain, rootDir)
+  registerModelScannerHandlers(ipcMain, extraRootDir)
 
   // 注册知识库 IPC
-  registerKnowledgeHandlers(ipcMain, rootDir, addLog)
+  registerKnowledgeHandlers(ipcMain, extraRootDir, addLog)
 }
 
 // ============ 应用启动与生命周期 ============
