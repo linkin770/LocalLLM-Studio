@@ -1186,9 +1186,10 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Specs */
 .specs {
-  max-width: 760px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 48px 32px 80px;
+  padding: 100px 32px 80px;
+  border-top: 1px solid var(--line);
 }
 .specs-head { text-align: center; margin-bottom: 32px; }
 .specs-list {
@@ -1639,15 +1640,10 @@ button { font-family: inherit; cursor: pointer; }
 /* =================================================================
    Specs — keep existing styles, add border-top
    ================================================================= */
-.specs {
-  border-top: 1px solid var(--line);
-}
-
-/* Specs 区块布局 */
 .specs-block {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto 56px;
-  padding: 0 32px;
+  padding: 0;
 }
 .specs-block:last-child { margin-bottom: 24px; }
 .specs-block-title {
