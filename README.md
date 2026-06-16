@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 本语 / LocalLLM Studio
 
@@ -17,7 +17,7 @@
 无命令行,管理本地 AI 服务。内置流式聊天、OpenAI 兼容接口、知识库检索、系统托盘后台运行。  
 全 app 黑白灰,token 驱动,Linear 风。
 
-[界面预览](https://linkin770.github.io/illama-desktop/) · [快速开始](#-快速开始) · [更新日志](#-更新日志)
+[界面预览](https://linkin770.github.io/LocalLLM-Studio/) · [快速开始](#-快速开始) · [更新日志](#-更新日志)
 
 </div>
 
@@ -36,7 +36,7 @@
 
 ## 🎨 视觉预览
 
-在线实时预览:**👉 [https://linkin770.github.io/illama-desktop/](https://linkin770.github.io/illama-desktop/)**
+在线实时预览:**👉 [https://linkin770.github.io/LocalLLM-Studio/](https://linkin770.github.io/LocalLLM-Studio/)**
 
 包含:
 - 4 个真实 UI 高保真还原(对话·欢迎 / 设置·概览 / 知识库 / 对话·详情),可切换 tab
@@ -135,7 +135,7 @@ npm start
 
 ### 方式二:下载预编译包
 
-1. 从 [Releases](https://github.com/linkin770/illama-desktop/releases) 下载
+1. 从 [Releases](https://github.com/linkin770/LocalLLM-Studio/releases) 下载
 2. 解压后运行 `本语 · LocalLLM Studio.exe`
 
 ### 准备 llama.cpp
@@ -208,7 +208,7 @@ ${ARGUMENTS}
 ## 🏗️ 项目结构
 
 ```
-illama-desktop/
+LocalLLM-Studio/
 ├── assets/                  # 图标和资源
 │   ├── LocalLLM.png
 │   ├── LocalLLM.ico
