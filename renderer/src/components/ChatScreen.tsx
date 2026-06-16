@@ -1,0 +1,448 @@
+// 聊天屏幕组件 - 展示消息列表和输入区域
+import { useRef, useState, useCallback, useEffect, useMemo, memo } from 'react'
+import type { ChatMessage, Attachment, Skill } from '../types'
+import { Bubble, Prompts } from '@ant-design/x'
+import {
+  renderMessageContent,
+  renderMessageMeta,
+  renderMessageAvatar,
+  renderMessageActions,
+} from './ChatMessage'
+import { ChatInput } from './ChatInput'
+
+interface ChatScreenProps {
+  chatMessages: ChatMessage[]
+  chatInput: string
+  attachments: Attachment[]
+  chatBusy: boolean
+  config: Record<string, unknown> | null
+  onInputChange: (value: string) => void
+  onSend: (content: string) => void
+  onAbort: () => void
+  onPickAttachment: (kind: string) => void
+  onPickSkill: (skill: Skill) => void
+  selectedSkill: Skill | null
+  onRemoveSkill: () => void
+  onRemoveAttachment: (index: number) => void
+  onOpenModelInfo: () => void
+  onCopyMessage: (index: number) => void
+  onEditMessage: (index: number) => void
+  onRetryMessage: (index: number) => void
+  onDeleteMessage: (index: number) => void
+  onPrevVariant: (index: number) => void
+  onNextVariant: (index: number) => void
+  /** 当前会话 ID —— 切换会话时强制滚动到底部 */
+  currentSessionId?: string
+  systemPrompt?: string
+  onOpenSystemPromptModal: () => void
+  onUpdateConfig?: (key: string, value: unknown) => void
+  onSetToast?: (message: string) => void
+  onRestartServer?: () => Promise<void>
+  isServerRunning?: boolean
+}
+
+// 使用 memo 避免在流式输出时重新渲染所有已生成的消息
+// 自定义比较：非流式消息忽略 totalSessionTokens 变化
+const MessageItem = memo(function MessageItem({
+  message,
+  index,
+  chatBusy,
+  ctxSize,
+  totalSessionTokens,
+  onCopyMessage,
+  onEditMessage,
+  onRetryMessage,
+  onDeleteMessage,
+  onPrevVariant,
+  onNextVariant,
+}: {
+  message: ChatMessage
+  index: number
+  chatBusy: boolean
+  ctxSize: number
+  totalSessionTokens: number
+  onCopyMessage: (index: number) => void
+  onEditMessage: (index: number) => void
+  onRetryMessage: (index: number) => void
+  onDeleteMessage: (index: number) => void
+  onPrevVariant: (index: number) => void
+  onNextVariant: (index: number) => void
+}) {
+  return (
+    <Bubble
+      className={`message ${message.role}`}
+      data-message-index={index}
+      placement={message.role === 'user' ? 'end' : 'start'}
+      avatar={renderMessageAvatar(message.role)}
+      content={renderMessageContent(message, chatBusy)}
+      styles={{ footer: { marginTop: -8 } }}
+      footer={
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: message.role === 'user' ? 'flex-end' : 'flex-start', width: '100%' }}>
+          {renderMessageMeta(message, ctxSize, totalSessionTokens)}
+          {renderMessageActions(message, index, onCopyMessage, onEditMessage, onRetryMessage, onDeleteMessage, onPrevVariant, onNextVariant)}
+        </div>
+      }
+    />
+  )
+}, (prev, next) => {
+  // 非流式消息：忽略 totalSessionTokens 变化，避免不必要的重渲染
+  if (!prev.message.streaming && !next.message.streaming && prev.totalSessionTokens !== next.totalSessionTokens) {
+    // 通过内容比较判断是否需要重渲染（因为 React 不可变更新会创建新对象引用）
+    return prev.index === next.index
+      && prev.chatBusy === next.chatBusy
+      && prev.ctxSize === next.ctxSize
+      && prev.message.content === next.message.content
+      && prev.message.role === next.message.role
+      && prev.onCopyMessage === next.onCopyMessage
+      && prev.onEditMessage === next.onEditMessage
+      && prev.onRetryMessage === next.onRetryMessage
+      && prev.onDeleteMessage === next.onDeleteMessage
+      && prev.onPrevVariant === next.onPrevVariant
+      && prev.onNextVariant === next.onNextVariant
+  }
+  return false
+})
+
+export function ChatScreen({
+  chatMessages,
+  chatInput,
+  attachments,
+  chatBusy,
+  config,
+  onInputChange,
+  onSend,
+  onAbort,
+  onPickAttachment,
+  onPickSkill,
+  selectedSkill,
+  onRemoveSkill,
+  onRemoveAttachment,
+  onOpenModelInfo,
+  onCopyMessage,
+  onEditMessage,
+  onRetryMessage,
+  onDeleteMessage,
+  onPrevVariant,
+  onNextVariant,
+  currentSessionId,
+  systemPrompt,
+  onOpenSystemPromptModal,
+  onUpdateConfig,
+  onSetToast,
+  onRestartServer,
+  isServerRunning,
+}: ChatScreenProps) {
+  const chatFeedRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const stickToBottomRef = useRef(true)
+  const isDraggingScrollbarRef = useRef(false)
+
+  // 计算会话总令牌数（仅在最后一条消息变化时重算，流式更新时用缓存值）
+  const totalSessionTokens = useMemo(() => {
+    return chatMessages.reduce((total, msg) => {
+      const tokens = msg.tokens || msg.estimatedTokens || 0
+      return total + Number(tokens || 0)
+    }, 0)
+  }, [chatMessages])
+
+  // 获取上下文大小
+  const ctxSize = useMemo(() => {
+    return config?.ctx_size ? Number(config.ctx_size) : 32768
+  }, [config])
+
+  // 检查是否滚动到底部附近
+  const isNearBottom = useCallback((el: HTMLDivElement) => {
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 96
+  }, [])
+
+  // 监听滚动事件
+  useEffect(() => {
+    const feed = chatFeedRef.current
+    if (!feed) return
+
+    const handleScroll = () => {
+      if (isDraggingScrollbarRef.current) return
+      const near = isNearBottom(feed)
+      // 更新是否要保持在底部
+      if (stickToBottomRef.current && !near) {
+        stickToBottomRef.current = false
+      } else if (!stickToBottomRef.current && near) {
+        stickToBottomRef.current = true
+      }
+      setShowScrollButton(!near)
+    }
+
+    feed.addEventListener('scroll', handleScroll, { passive: true })
+    return () => feed.removeEventListener('scroll', handleScroll)
+  }, [isNearBottom])
+
+  // 处理滚动条拖拽
+  useEffect(() => {
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (target === chatFeedRef.current || target.closest('.chat-feed')) {
+        const feed = chatFeedRef.current
+        if (!feed) return
+        const rect = feed.getBoundingClientRect()
+        // 检查是否点击在滚动条区域
+        if (event.clientX > rect.right - 12) {
+          isDraggingScrollbarRef.current = true
+          stickToBottomRef.current = false
+        }
+      }
+    }
+
+    const handleMouseUp = () => {
+      if (isDraggingScrollbarRef.current) {
+        isDraggingScrollbarRef.current = false
+        const feed = chatFeedRef.current
+        if (feed && isNearBottom(feed)) {
+          stickToBottomRef.current = true
+        }
+      }
+    }
+
+    const handleTouchStart = () => {
+      isDraggingScrollbarRef.current = true
+      stickToBottomRef.current = false
+    }
+
+    const handleTouchEnd = () => {
+      if (isDraggingScrollbarRef.current) {
+        isDraggingScrollbarRef.current = false
+        const feed = chatFeedRef.current
+        if (feed && isNearBottom(feed)) {
+          stickToBottomRef.current = true
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isNearBottom])
+
+  // 新消息时自动滚动到底部（使用 useEffect + RAF 避免阻塞主线程）
+  useEffect(() => {
+    const feed = chatFeedRef.current
+    if (!feed || chatMessages.length === 0) return
+    if (stickToBottomRef.current && !isDraggingScrollbarRef.current) {
+      requestAnimationFrame(() => {
+        if (stickToBottomRef.current) {
+          feed.scrollTop = feed.scrollHeight
+        }
+      })
+    }
+  }, [chatMessages])
+
+  // 切换会话：重置 stick 标志并强制滚到底部
+  // 用 retry 链 + ResizeObserver 兼容 code block / 图片延迟布局
+  useEffect(() => {
+    if (!currentSessionId) return
+    const feed = chatFeedRef.current
+    if (!feed) return
+    // 重置
+    stickToBottomRef.current = true
+    isDraggingScrollbarRef.current = false
+    setShowScrollButton(false)
+
+    let lastH = -1
+    let stableCount = 0
+    let cancelled = false
+    let raf = 0
+
+    const scrollToEnd = () => {
+      if (cancelled) return
+      feed.scrollTop = feed.scrollHeight
+    }
+
+    const tick = () => {
+      if (cancelled) return
+      const h = feed.scrollHeight
+      if (h === lastH) {
+        stableCount += 1
+      } else {
+        lastH = h
+        stableCount = 0
+        scrollToEnd()
+      }
+      // 连续 3 帧 scrollHeight 不再变化 → 视为稳定
+      if (stableCount >= 3) {
+        scrollToEnd()
+        return
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    // 立刻滚一次（首帧可能 content 还没 layout）
+    requestAnimationFrame(() => {
+      if (cancelled) return
+      scrollToEnd()
+      raf = requestAnimationFrame(tick)
+    })
+
+    // 兜底：用 ResizeObserver 监听内容增长，content 真正完成布局（图片/code 高亮）后再滚
+    const ro = new ResizeObserver(() => {
+      if (cancelled) return
+      scrollToEnd()
+    })
+    ro.observe(feed)
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+    }
+  }, [currentSessionId])
+
+  // 手动滚动到底部
+  const scrollToBottom = () => {
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTo({ top: chatFeedRef.current.scrollHeight, behavior: 'smooth' })
+      stickToBottomRef.current = true
+    }
+  }
+
+  // 空状态
+  if (chatMessages.length === 0) {
+    const prompts = [
+      {
+        key: '1',
+        icon: '🧐',
+        label: '代码审查',
+        description: '审查代码，找出潜在 bug 并给出改进建议',
+      },
+      {
+        key: '2',
+        icon: '📝',
+        label: '文章总结',
+        description: '对长文进行结构化摘要，提炼核心要点',
+      },
+      {
+        key: '3',
+        icon: '🛡️',
+        label: '信息脱敏',
+        description: '从文本中识别并脱敏手机号、邮箱、身份证等敏感信息',
+      },
+    ]
+
+    return (
+      <section className="chat-screen empty-chat">
+        <div className="chat-feed" id="chatFeed" ref={chatFeedRef}>
+          <div className="empty-state">
+            <h1>本语 / LocalLLM Studio</h1>
+            <p>无需命令行，就能管理本地AI服务。它既是控制台，也是聊天室，更是连接OpenClaw、Claude Code等外部工具的桥梁。</p>
+            <div style={{ 
+              marginTop: 32, 
+              display: 'flex', 
+              justifyContent: 'center',
+              width: '100%',
+              maxWidth: 900,
+              margin: '32px auto 0'
+            }}>
+              <Prompts
+                items={prompts}
+                onItemClick={(item) => {
+                  const text = String(item.data?.label || '')
+                  onInputChange(text)
+                }}
+                styles={{
+                  item: {
+                    flex: '1 1 calc(33.333% - 12px)',
+                    minWidth: 200,
+                  },
+                  list: {
+                    gap: 16,
+                    flexWrap: 'wrap',
+                  },
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <ChatInput
+          chatInput={chatInput}
+          attachments={attachments}
+          chatBusy={chatBusy}
+          config={config}
+          onInputChange={onInputChange}
+          onSend={onSend}
+          onAbort={onAbort}
+          onPickSkill={onPickSkill}
+          selectedSkill={selectedSkill}
+          onRemoveSkill={onRemoveSkill}
+          onPickAttachment={onPickAttachment}
+          onRemoveAttachment={onRemoveAttachment}
+          onOpenModelInfo={onOpenModelInfo}
+          systemPrompt={systemPrompt}
+          onOpenSystemPromptModal={onOpenSystemPromptModal}
+          onUpdateConfig={onUpdateConfig}
+          onSetToast={onSetToast}
+          onRestartServer={onRestartServer}
+          isServerRunning={isServerRunning}
+        />
+      </section>
+    )
+  }
+
+  // 正常聊天状态
+  return (
+    <section className="chat-screen">
+      <div className="chat-feed" id="chatFeed" ref={chatFeedRef}>
+        {/* 使用 memo 包裹的消息组件，避免流式输出时重渲染所有已生成消息 */}
+        {chatMessages.map((message, index) => (
+          <MessageItem
+            key={`${message.role}-${message.createdAt}`}
+            message={message}
+            index={index}
+            chatBusy={chatBusy}
+            ctxSize={ctxSize}
+            totalSessionTokens={totalSessionTokens}
+            onCopyMessage={onCopyMessage}
+            onEditMessage={onEditMessage}
+            onRetryMessage={onRetryMessage}
+            onDeleteMessage={onDeleteMessage}
+            onPrevVariant={onPrevVariant}
+            onNextVariant={onNextVariant}
+          />
+        ))}
+      </div>
+      {/* 回到最新按钮 */}
+      {showScrollButton && (
+        <button className="scroll-to-bottom-btn visible" data-action="scroll-to-bottom" title="回到最新" onClick={scrollToBottom}>
+          ↓回到最新
+        </button>
+      )}
+      {/* 输入框 */}
+      <ChatInput
+        chatInput={chatInput}
+        attachments={attachments}
+        chatBusy={chatBusy}
+        config={config}
+        onInputChange={onInputChange}
+        onSend={onSend}
+        onAbort={onAbort}
+        onPickSkill={onPickSkill}
+        selectedSkill={selectedSkill}
+        onRemoveSkill={onRemoveSkill}
+        onPickAttachment={onPickAttachment}
+        onRemoveAttachment={onRemoveAttachment}
+        onOpenModelInfo={onOpenModelInfo}
+        systemPrompt={systemPrompt}
+        onOpenSystemPromptModal={onOpenSystemPromptModal}
+        onUpdateConfig={onUpdateConfig}
+        onSetToast={onSetToast}
+        onRestartServer={onRestartServer}
+        isServerRunning={isServerRunning}
+      />
+    </section>
+  )
+}

@@ -1,0 +1,16 @@
+appId: LocalLLM.Studio
+productName: LocalLLM Studio
+directories:
+  output: dist
+files:
+  - assets/**
+  - desktop/**
+  - renderer/**
+  - package.json
+win:
+  icon: assets/LocalLLM.ico
+  target:
+    - zip
+  artifactName: LocalLLM Studio-v${version}p.${ext}
+asar: true
+compression: normal

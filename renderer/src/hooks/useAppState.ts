@@ -1,0 +1,612 @@
+// 应用状态管理 Hook - 管理整个应用的状态和交互
+import { useState, useCallback, useEffect, useRef } from 'react'
+import type { AppState, Config, ChatMessage, Session, KnowledgeDocument } from '../types'
+
+// 默认应用状态
+const defaultState: AppState = {
+  active: 'overview',
+  config: null,
+  validation: {},
+  launch: {},
+  status: { state: 'stopped', message: '服务未启动', url: 'http://127.0.0.1:8080' },
+  logs: [],
+  view: 'chat',
+  sidebarPanel: 'chats',
+  sidebarCollapsed: false,
+  sessions: [],
+  currentSessionId: '',
+  openTabs: [],
+  historySearch: '',
+  historyMenuId: '',
+  historyDialog: null,
+  chatMessages: [],
+  chatInput: '',
+  attachments: [],
+  attachmentMenuOpen: false,
+  attachmentMenuPosition: null,
+  streamRequestId: '',
+  preview: null,
+  modelInfo: null,
+  modelInfoOpen: false,
+  chatBusy: false,
+  dirty: false,
+  busy: false,
+  settingsOpen: false,
+  toast: '',
+  stickToBottom: true,
+  knowledgeDocuments: [],
+  knowledgeEnabled: false,
+  knowledgeLoading: false,
+}
+
+// localStorage 会话存储的键名
+const SESSIONS_KEY = 'llama.cpp.desktop.sessions'
+
+// 从 localStorage 加载会话历史
+function loadSessions(): Session[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]')
+    if (!Array.isArray(saved)) return []
+    
+    // 向后兼容：为旧数据补充 createdAt 字段
+    return saved.map(session => ({
+      ...session,
+      createdAt: session.createdAt || session.updatedAt || Date.now(),
+    }))
+  } catch {
+    return []
+  }
+}
+
+// 将会话历史保存到 localStorage（最多保留 80 条）
+function persistSessions(sessions: Session[]) {
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions.slice(0, 80)))
+}
+
+// 生成唯一的会话 ID
+function makeSessionId(): string {
+  return `session-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+// 从消息列表中提取会话标题（取第一条用户消息）
+function titleFromMessages(messages: ChatMessage[]): string {
+  const firstUser = messages.find(msg => msg.role === 'user' && String(msg.content || '').trim())
+  return String(firstUser?.content || '新聊天').replace(/\s+/g, ' ').slice(0, 36)
+}
+
+// 应用状态 Hook
+export function useAppState() {
+  // 初始化状态，从 localStorage 加载会话历史
+  const [state, setState] = useState<AppState>(() => {
+    const initialId = makeSessionId()
+    return {
+      ...defaultState,
+      sessions: loadSessions(),
+      currentSessionId: initialId,
+      openTabs: [initialId],
+    }
+  })
+
+  // Toast 定时器引用
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 显示 Toast 提示（自动在 2.8 秒后消失）
+  const setToast = useCallback((message: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current)
+    }
+    setState(prev => ({ ...prev, toast: message }))
+    toastTimerRef.current = setTimeout(() => {
+      setState(prev => ({ ...prev, toast: '' }))
+    }, 2800)
+  }, [])
+
+  // 从后端更新状态（配置、验证、服务状态、日志等）
+  const patchFromBackend = useCallback((payload: Partial<Pick<AppState, 'config' | 'validation' | 'status' | 'logs' | 'launch'>>) => {
+    setState(prev => ({
+      ...prev,
+      ...payload,
+      dirty: false,
+    }))
+  }, [])
+
+  // 保存当前会话到历史
+  // 注意：updatedAt 仅在消息 / 标题 / systemPrompt 真正变化时刷新；
+  //        切换会话等"仅查看"行为不应动 updatedAt（否则会话会跳到"今天"分组）
+  const saveCurrentSession = useCallback((options: { touchUpdatedAt?: boolean } = {}) => {
+    const { touchUpdatedAt = true } = options
+    setState(prev => {
+      if (!prev.currentSessionId || prev.chatMessages.length === 0) return prev
+
+      // 获取当前会话的 systemPrompt
+      const currentSession = prev.sessions.find(s => s.id === prev.currentSessionId)
+
+      const now = Date.now()
+      const next: Session = {
+        id: prev.currentSessionId,
+        title: titleFromMessages(prev.chatMessages),
+        messages: prev.chatMessages,
+        createdAt: currentSession?.createdAt || now, // 保留创建时间
+        updatedAt: touchUpdatedAt
+          ? now
+          : (currentSession?.updatedAt ?? now), // 保留原更新时间
+        systemPrompt: currentSession?.systemPrompt, // 保留 systemPrompt
+      }
+      
+      const existingIndex = prev.sessions.findIndex(s => s.id === prev.currentSessionId)
+      let updatedSessions: Session[]
+      
+      if (existingIndex >= 0) {
+        updatedSessions = [...prev.sessions]
+        updatedSessions.splice(existingIndex, 1, next)
+      } else {
+        updatedSessions = [next, ...prev.sessions]
+      }
+      
+      persistSessions(updatedSessions)
+      
+      return { ...prev, sessions: updatedSessions }
+    })
+  }, [])
+
+  // 关闭标签页
+  // 关闭标签属于"仅查看/管理"行为，**不**刷新被关闭会话的 updatedAt
+  const closeTab = useCallback((tabId: string) => {
+    // 关闭当前标签时中断流式请求
+    window.llamaDesktop?.abortChat?.().catch(() => {})
+    setState(prev => {
+      // 1. 保存当前会话（如果和关闭的标签相同）
+      const now = Date.now()
+      let sessions = prev.sessions
+      if (prev.currentSessionId === tabId && prev.chatMessages.length > 0) {
+        const currentSessionData = sessions.find(s => s.id === prev.currentSessionId)
+        const current: Session = {
+          id: prev.currentSessionId,
+          title: titleFromMessages(prev.chatMessages),
+          messages: prev.chatMessages,
+          createdAt: currentSessionData?.createdAt || now, // 保留创建时间
+          updatedAt: currentSessionData?.updatedAt ?? now, // 保留原更新时间
+        }
+        const idx = sessions.findIndex(s => s.id === prev.currentSessionId)
+        if (idx >= 0) {
+          sessions = [...sessions]
+          sessions.splice(idx, 1, current)
+        } else {
+          sessions = [current, ...sessions]
+        }
+      }
+      
+      // 2. 移除标签
+      const openTabs = prev.openTabs.filter(id => id !== tabId)
+      
+      // 3. 如果没有标签了，创建新会话
+      if (openTabs.length === 0) {
+        const newId = makeSessionId()
+        persistSessions(sessions)
+        return {
+          ...prev,
+          sessions,
+          openTabs: [newId],
+          currentSessionId: newId,
+          chatMessages: [],
+          chatInput: '',
+          attachments: [],
+          attachmentMenuOpen: false,
+          historyMenuId: '',
+          chatBusy: false,
+          streamRequestId: '',
+        }
+      }
+      
+      // 4. 切换到相邻标签
+      const currentIdx = prev.openTabs.indexOf(tabId)
+      let nextActiveId = openTabs[Math.min(currentIdx, openTabs.length - 1)]
+      
+      // 加载目标会话消息
+      const targetSession = sessions.find(s => s.id === nextActiveId)
+      const messages = targetSession
+        ? targetSession.messages.map(msg => ({ ...msg, streaming: false }))
+        : []
+      
+      persistSessions(sessions)
+      
+      return {
+        ...prev,
+        sessions,
+        openTabs,
+        currentSessionId: nextActiveId,
+        chatMessages: messages,
+        chatInput: '',
+        attachments: [],
+        attachmentMenuOpen: false,
+        historyMenuId: '',
+        stickToBottom: true,
+        chatBusy: false,
+        streamRequestId: '',
+      }
+    })
+  }, [])
+
+  // 打开历史会话（自动加入标签栏）
+  // 重要：切换会话时只持久化消息，**不**更新上一个会话的 updatedAt
+  //        否则被切走的会话会跳到"今天"分组
+  const openSession = useCallback((sessionId: string) => {
+    // 切换会话时中断流式请求
+    window.llamaDesktop?.abortChat?.().catch(() => {})
+    setState(prev => {
+      // 1. 保存当前会话（仅持久化，不刷新 updatedAt）
+      const now = Date.now()
+      let sessions = prev.sessions
+      if (prev.currentSessionId && prev.chatMessages.length > 0) {
+        // 获取当前会话的 systemPrompt
+        const currentSessionData = sessions.find(s => s.id === prev.currentSessionId)
+        const current: Session = {
+          id: prev.currentSessionId,
+          title: titleFromMessages(prev.chatMessages),
+          messages: prev.chatMessages,
+          createdAt: currentSessionData?.createdAt || now, // 保留创建时间
+          updatedAt: currentSessionData?.updatedAt ?? now, // 保留原更新时间
+          systemPrompt: currentSessionData?.systemPrompt, // 保留 systemPrompt
+        }
+        const idx = sessions.findIndex(s => s.id === prev.currentSessionId)
+        if (idx >= 0) {
+          sessions = [...sessions]
+          sessions.splice(idx, 1, current)
+        } else {
+          sessions = [current, ...sessions]
+        }
+      }
+      
+      // 2. 确保目标在标签栏中
+      let openTabs = prev.openTabs
+      if (!openTabs.includes(sessionId)) {
+        openTabs = [...openTabs, sessionId]
+      }
+      
+      // 3. 加载目标会话消息
+      const session = sessions.find(s => s.id === sessionId)
+      const cleanedMessages = session
+        ? session.messages.map(msg => ({ ...msg, streaming: false }))
+        : []
+      
+      persistSessions(sessions)
+      
+      return {
+        ...prev,
+        sessions,
+        openTabs,
+        currentSessionId: sessionId,
+        chatMessages: cleanedMessages,
+        chatInput: '',
+        attachments: [],
+        view: 'chat',
+        sidebarPanel: 'chats',
+        attachmentMenuOpen: false,
+        historyMenuId: '',
+        stickToBottom: true,
+        chatBusy: false,
+        streamRequestId: '',
+      }
+    })
+  }, [])
+
+  // 开始新会话
+  // 创建新会话前要先持久化旧的；这里属于"仅切换"，不刷新旧会话的 updatedAt
+  const startFreshSession = useCallback(() => {
+    // 新建会话时中断流式请求
+    window.llamaDesktop?.abortChat?.().catch(() => {})
+    saveCurrentSession({ touchUpdatedAt: false })
+    const newId = makeSessionId()
+    
+    setState(prev => {
+      const exists = prev.sessions.some(s => s.id === newId)
+      let updatedSessions = prev.sessions
+      
+      if (!exists) {
+        updatedSessions = [{
+          id: newId,
+          title: '新聊天',
+          messages: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }, ...prev.sessions]
+        persistSessions(updatedSessions)
+      }
+      
+      return {
+        ...prev,
+        currentSessionId: newId,
+        openTabs: [...prev.openTabs, newId],
+        chatMessages: [],
+        chatInput: '',
+        attachments: [],
+        attachmentMenuOpen: false,
+        view: 'chat',
+        sidebarPanel: 'chats',
+        historyMenuId: '',
+        sessions: updatedSessions,
+        chatBusy: false,
+        streamRequestId: '',
+      }
+    })
+  }, [saveCurrentSession])
+
+  // 重命名会话
+  const renameSession = useCallback((sessionId: string, newTitle: string) => {
+    setState(prev => {
+      const updatedSessions = prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, title: newTitle, updatedAt: Date.now() } : s
+      )
+      persistSessions(updatedSessions)
+      return { ...prev, sessions: updatedSessions }
+    })
+  }, [])
+
+  // 删除会话
+  const deleteSession = useCallback((sessionId: string) => {
+    // 删除会话时中断流式请求
+    window.llamaDesktop?.abortChat?.().catch(() => {})
+    setState(prev => {
+      const updatedSessions = prev.sessions.filter(s => s.id !== sessionId)
+      const openTabs = prev.openTabs.filter(id => id !== sessionId)
+      persistSessions(updatedSessions)
+      if (prev.currentSessionId === sessionId) {
+        const nextId = openTabs.length > 0 ? openTabs[Math.min(prev.openTabs.indexOf(sessionId), openTabs.length - 1)] : makeSessionId()
+        const nextSession = updatedSessions.find(s => s.id === nextId)
+        return {
+          ...prev,
+          sessions: updatedSessions,
+          openTabs: openTabs.length > 0 ? openTabs : [nextId],
+          currentSessionId: nextId,
+          chatMessages: nextSession ? nextSession.messages.map(msg => ({ ...msg, streaming: false })) : [],
+          chatInput: '',
+          attachments: [],
+          attachmentMenuOpen: false,
+          historyMenuId: '',
+          chatBusy: false,
+          streamRequestId: '',
+        }
+      }
+      return { ...prev, sessions: updatedSessions, openTabs }
+    })
+  }, [])
+
+  // 设置会话级系统提示词
+  const setSessionSystemPrompt = useCallback((sessionId: string, prompt: string) => {
+    setState(prev => {
+      let updatedSessions = prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, systemPrompt: prompt.trim() || undefined, updatedAt: Date.now() } : s
+      )
+      // 如果会话不在列表中（首次打开时的初始会话），创建它
+      if (!updatedSessions.some(s => s.id === sessionId)) {
+        updatedSessions = [{
+          id: sessionId,
+          title: '新聊天',
+          messages: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          systemPrompt: prompt.trim() || undefined,
+        }, ...updatedSessions]
+      }
+      persistSessions(updatedSessions)
+      return { ...prev, sessions: updatedSessions }
+    })
+  }, [])
+
+  // 清除会话级系统提示词
+  const clearSessionSystemPrompt = useCallback((sessionId: string) => {
+    setState(prev => {
+      const updatedSessions = prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, systemPrompt: undefined, updatedAt: Date.now() } : s
+      )
+      persistSessions(updatedSessions)
+      return { ...prev, sessions: updatedSessions }
+    })
+  }, [])
+
+  // 更新配置项
+  const updateConfig = useCallback((key: keyof Config, value: unknown) => {
+    setState(prev => ({
+      ...prev,
+      config: { ...prev.config, [key]: value },
+      dirty: true,
+    }))
+  }, [])
+
+  // 更新聊天输入框内容
+  const updateChatInput = useCallback((value: string) => {
+    setState(prev => ({ ...prev, chatInput: value }))
+  }, [])
+
+  // 添加附件
+  const addAttachments = useCallback((attachments: AppState['attachments']) => {
+    setState(prev => ({ ...prev, attachments: [...prev.attachments, ...attachments] }))
+  }, [])
+
+  // 移除附件
+  const removeAttachment = useCallback((index: number) => {
+    setState(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }))
+  }, [])
+
+  // 清空所有附件
+  const clearAttachments = useCallback(() => {
+    setState(prev => ({ ...prev, attachments: [] }))
+  }, [])
+
+  // 添加聊天消息
+  const addChatMessage = useCallback((message: ChatMessage) => {
+    setState(prev => ({
+      ...prev,
+      chatMessages: [...prev.chatMessages, message],
+    }))
+  }, [])
+
+  // 更新聊天消息（支持函数式更新）
+  const updateChatMessage = useCallback((index: number, updates: Partial<ChatMessage> | ((prev: ChatMessage) => Partial<ChatMessage>)) => {
+    setState(prev => ({
+      ...prev,
+      chatMessages: prev.chatMessages.map((msg, i) =>
+        i === index ? { ...msg, ...(typeof updates === 'function' ? updates(msg) : updates) } : msg
+      ),
+    }))
+  }, [])
+
+  // 移除聊天消息
+  const removeChatMessage = useCallback((index: number) => {
+    setState(prev => ({
+      ...prev,
+      chatMessages: prev.chatMessages.filter((_, i) => i !== index),
+    }))
+  }, [])
+
+  // 设置聊天消息列表
+  const setChatMessages = useCallback((messages: ChatMessage[]) => {
+    setState(prev => ({ ...prev, chatMessages: messages }))
+  }, [])
+
+  // 设置聊天是否忙碌
+  const setChatBusy = useCallback((busy: boolean) => {
+    setState(prev => ({ ...prev, chatBusy: busy }))
+  }, [])
+
+  // 设置流式请求 ID
+  const setStreamRequestId = useCallback((id: string) => {
+    setState(prev => ({ ...prev, streamRequestId: id }))
+  }, [])
+
+  // 切换视图（聊天/知识库/设置）
+  const setView = useCallback((view: 'chat' | 'knowledge' | 'settings') => {
+    setState(prev => ({ ...prev, view }))
+  }, [])
+
+  // 设置当前激活面板
+  const setActive = useCallback((active: string) => {
+    setState(prev => ({ ...prev, active }))
+  }, [])
+
+  // 设置设置面板是否打开
+  const setSettingsOpen = useCallback((open: boolean) => {
+    setState(prev => ({ ...prev, settingsOpen: open }))
+  }, [])
+
+  // 设置侧边栏是否折叠
+  const setSidebarCollapsed = useCallback((collapsed: boolean) => {
+    setState(prev => ({ ...prev, sidebarCollapsed: collapsed }))
+  }, [])
+
+  // 设置历史搜索词
+  const setHistorySearch = useCallback((search: string) => {
+    setState(prev => ({ ...prev, historySearch: search }))
+  }, [])
+
+  // 设置历史菜单 ID
+  const setHistoryMenuId = useCallback((id: string) => {
+    setState(prev => ({ ...prev, historyMenuId: id }))
+  }, [])
+
+  // 设置附件菜单是否打开及位置
+  const setAttachmentMenuOpen = useCallback((open: boolean, position?: { left: number; top: number }) => {
+    setState(prev => ({
+      ...prev,
+      attachmentMenuOpen: open,
+      attachmentMenuPosition: open ? position || null : null,
+    }))
+  }, [])
+
+  // 设置模型信息
+  const setModelInfo = useCallback((info: AppState['modelInfo']) => {
+    setState(prev => ({ ...prev, modelInfo: info }))
+  }, [])
+
+  // 设置模型信息面板是否打开
+  const setModelInfoOpen = useCallback((open: boolean) => {
+    setState(prev => ({ ...prev, modelInfoOpen: open }))
+  }, [])
+
+  // 设置是否有未保存的更改
+  const setDirty = useCallback((dirty: boolean) => {
+    setState(prev => ({ ...prev, dirty }))
+  }, [])
+
+  // 设置是否忙碌
+  const setBusy = useCallback((busy: boolean) => {
+    setState(prev => ({ ...prev, busy }))
+  }, [])
+
+  // 设置服务状态
+  const setStatus = useCallback((status: AppState['status']) => {
+    setState(prev => ({ ...prev, status }))
+  }, [])
+
+  // 设置日志列表
+  const setLogs = useCallback((logs: AppState['logs']) => {
+    setState(prev => ({ ...prev, logs }))
+  }, [])
+
+  // 组件卸载时清理 Toast 定时器
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current)
+      }
+    }
+  }, [])
+
+  // 返回状态和所有操作方法
+  return {
+    state,
+    setToast,
+    patchFromBackend,
+    saveCurrentSession,
+    openSession,
+    closeTab,
+    startFreshSession,
+    renameSession,
+    deleteSession,
+    setSessionSystemPrompt,
+    clearSessionSystemPrompt,
+    updateConfig,
+    updateChatInput,
+    addAttachments,
+    removeAttachment,
+    clearAttachments,
+    addChatMessage,
+    updateChatMessage,
+    removeChatMessage,
+    setChatMessages,
+    setChatBusy,
+    setStreamRequestId,
+    setView,
+    setActive,
+    setSettingsOpen,
+    setSidebarCollapsed,
+    setHistorySearch,
+    setHistoryMenuId,
+    setAttachmentMenuOpen,
+    setModelInfo,
+    setModelInfoOpen,
+    setDirty,
+    setBusy,
+    setStatus,
+    setLogs,
+    // 知识库管理
+    setKnowledgeDocuments: (docs: KnowledgeDocument[] | ((prev: KnowledgeDocument[]) => KnowledgeDocument[])) => {
+      setState(prev => ({
+        ...prev,
+        knowledgeDocuments: typeof docs === 'function' ? docs(prev.knowledgeDocuments) : docs,
+      }))
+    },
+    setKnowledgeEnabled: (enabled: boolean) => {
+      setState(prev => ({ ...prev, knowledgeEnabled: enabled }))
+    },
+    setKnowledgeLoading: (loading: boolean) => {
+      setState(prev => ({ ...prev, knowledgeLoading: loading }))
+    },
+  }
+}
+
+// 应用状态操作类型
+export type AppStateActions = ReturnType<typeof useAppState>

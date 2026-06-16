@@ -1,0 +1,329 @@
+/* ============================================================
+   Primitives — design-system building blocks (p- 前缀)
+   ============================================================ */
+
+/* ----- StatusDot ----- */
+.p-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  background: var(--ink-4);
+  display: inline-block;
+}
+.p-dot.running  { background: var(--success); }
+.p-dot.stopped  { background: var(--ink-4); }
+.p-dot.warning  { background: var(--warning); }
+.p-dot.danger   { background: var(--danger); }
+.p-dot.idle     { background: var(--ink-4); }
+.p-dot.pending  { background: var(--pending); }
+.p-dot.error    { background: var(--danger); }
+
+/* pulse (running) */
+.p-dot.running::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.35;
+  animation: p-dot-pulse 1.8s var(--ease-in-out) infinite;
+}
+@keyframes p-dot-pulse {
+  0%   { transform: scale(0.8); opacity: 0.5; }
+  50%  { transform: scale(1.4); opacity: 0;   }
+  100% { transform: scale(0.8); opacity: 0;   }
+}
+
+/* spin (loading) */
+.p-dot.starting {
+  background: conic-gradient(var(--warning) 0% 30%, var(--line-strong) 30% 100%);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  mask: radial-gradient(circle, transparent 50%, #000 51%);
+  -webkit-mask: radial-gradient(circle, transparent 50%, #000 51%);
+  animation: p-dot-spin 1.2s linear infinite;
+}
+@keyframes p-dot-spin { to { transform: rotate(360deg); } }
+
+/* ----- Pill ----- */
+.p-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--bg-canvas);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.4;
+  user-select: none;
+}
+.p-pill.success { background: var(--success-soft); color: var(--success); }
+.p-pill.warning { background: var(--warning-soft); color: var(--warning); }
+.p-pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+.p-pill.neutral { background: var(--bg-canvas);     color: var(--ink-1); border-color: var(--line); }
+
+/* ----- Chip ----- */
+.p-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--ink-1);
+  white-space: nowrap;
+  line-height: 1.4;
+  user-select: none;
+  max-width: 240px;
+}
+.p-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  flex-shrink: 0;
+}
+.p-chip-dot.accent { background: var(--accent); }
+.p-chip-dot.success { background: var(--success); }
+.p-chip-dot.warning { background: var(--warning); }
+.p-chip-dot.danger  { background: var(--danger); }
+.p-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.p-chip-remove {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink-3);
+  background: transparent;
+  flex-shrink: 0;
+  margin-left: 2px;
+  transition: background 100ms var(--ease-out), color 100ms var(--ease-out);
+}
+.p-chip-remove:hover { background: var(--active); color: var(--ink-1); }
+.p-chip.accent { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+.p-chip.success { background: var(--success-soft); border-color: transparent; color: var(--success); }
+.p-chip.warning { background: var(--warning-soft); border-color: transparent; color: var(--warning); }
+.p-chip.danger  { background: var(--danger-soft);  border-color: transparent; color: var(--danger); }
+
+/* ----- IconButton ----- */
+.p-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 100ms var(--ease-out), color 100ms var(--ease-out), border-color 100ms var(--ease-out);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.p-icon-btn:hover { background: var(--hover); color: var(--ink-1); }
+.p-icon-btn:active { background: var(--active); }
+.p-icon-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+.p-icon-btn.size-sm { width: 24px; height: 24px; border-radius: 6px; }
+.p-icon-btn.size-lg { width: 32px; height: 32px; border-radius: 8px; }
+.p-icon-btn.bordered { border-color: var(--line); background: var(--bg-surface); }
+.p-icon-btn.bordered:hover { background: var(--hover); border-color: var(--line-strong); }
+.p-icon-btn.danger:hover { background: var(--danger-soft); color: var(--danger); }
+.p-icon-btn.active { background: var(--active); color: var(--ink-1); }
+
+/* ----- TextField ----- */
+.p-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink-1);
+  transition: border-color 100ms var(--ease-out), box-shadow 100ms var(--ease-out);
+}
+.p-field:hover { border-color: var(--line-strong); }
+.p-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--sh-focus);
+}
+.p-field .icon-left,
+.p-field .icon-right {
+  display: inline-grid;
+  place-items: center;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.p-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink-1);
+  font-size: 13px;
+}
+.p-field input::placeholder { color: var(--ink-3); }
+.p-field .suffix,
+.p-field .prefix {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.p-field.invalid { border-color: var(--danger); }
+.p-field.size-sm { height: 28px; font-size: 12.5px; }
+.p-field.size-lg { height: 40px; font-size: 14px; }
+
+/* ----- Kbd ----- */
+.p-kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-1);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  line-height: 1;
+  user-select: none;
+}
+.p-kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.p-kbd-sep {
+  font-size: 10px;
+  color: var(--ink-3);
+  margin: 0 2px;
+}
+
+/* ----- Divider ----- */
+.p-divider-h {
+  height: 1px;
+  background: var(--line);
+  width: 100%;
+  border: none;
+  margin: 0;
+}
+.p-divider-v {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+  margin: 0;
+}
+
+/* ----- StatusPill (live indicator) ----- */
+.p-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 100ms var(--ease-out), color 100ms var(--ease-out);
+  border: 1px solid var(--line);
+  background: var(--bg-surface);
+  white-space: nowrap;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  height: 26px;
+}
+.p-status-pill:hover { background: var(--hover); color: var(--ink-1); }
+.p-status-pill.bare { border-color: transparent; background: var(--bg-surface); }
+.p-status-pill .name { color: var(--ink-1); font-weight: 500; }
+.p-status-pill .sep { color: var(--ink-4); margin: 0 2px; }
+.p-status-pill .meta { color: var(--ink-3); }
+
+/* ----- Button (refined) ----- */
+.p-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 100ms var(--ease-out), color 100ms var(--ease-out), border-color 100ms var(--ease-out);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-1);
+  user-select: none;
+}
+.p-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.p-btn.size-sm { height: 26px; padding: 0 8px; font-size: 12px; border-radius: 6px; }
+.p-btn.size-lg { height: 40px; padding: 0 16px; font-size: 14px; }
+.p-btn.size-icon { width: 32px; padding: 0; }
+
+.p-btn-primary { background: var(--accent); color: var(--ink-on-accent); }
+.p-btn-primary:hover { background: var(--accent-hover); }
+.p-btn-primary:active { background: var(--accent-press); }
+
+.p-btn-secondary { background: var(--bg-surface); color: var(--ink-1); border-color: var(--line); }
+.p-btn-secondary:hover { background: var(--hover); border-color: var(--line-strong); }
+.p-btn-secondary:active { background: var(--active); }
+
+.p-btn-ghost { color: var(--ink-2); }
+.p-btn-ghost:hover { background: var(--hover); color: var(--ink-1); }
+
+.p-btn-danger { background: var(--danger-soft); color: var(--danger); }
+.p-btn-danger:hover { background: rgba(220, 38, 38, 0.14); }
+
+.p-btn-link {
+  color: var(--accent);
+  padding: 0;
+  height: auto;
+  background: transparent;
+}
+.p-btn-link:hover { text-decoration: underline; }
+
+/* ----- Empty section helpers ----- */
+.p-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+.p-section-divider::before,
+.p-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+

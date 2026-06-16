@@ -1,0 +1,133 @@
+#chat-nav-bar {
+  position: fixed;
+  right: 16px;
+  top: 40%;
+  transform: translateY(-50%);
+  width: 24px;
+  max-height: 35vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 9999;
+  transition: width 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease, padding 0.3s ease;
+  background: transparent;
+  padding: 8px 6px;
+  scrollbar-width: none;
+}
+
+#chat-nav-bar::-webkit-scrollbar {
+  display: none;
+}
+
+#chat-nav-bar.expanded {
+  width: 200px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 16px 6px 16px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+  border: 1px solid #e5e5ea;
+}
+
+#chat-nav-bar.expanded::-webkit-scrollbar {
+  display: block;
+  width: 4px;
+}
+
+#chat-nav-bar.expanded::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 0;
+  cursor: pointer;
+  overflow: hidden;
+  gap: 1em;
+}
+
+.nav-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  color: #6c6c6e;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.25s, color 0.15s;
+}
+
+#chat-nav-bar.expanded .nav-text {
+  opacity: 1;
+}
+
+#chat-nav-bar.expanded .nav-item:hover .nav-text {
+  color: #2c2c2e;
+}
+
+.nav-dash {
+  flex-shrink: 0;
+  color: #d4d4d8;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.nav-item.active .nav-dash {
+  color: #1a1d21;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.nav-item.active .nav-text {
+  color: #1a1d21;
+}
+
+#chat-nav-bar.expanded .nav-item.active:hover .nav-text {
+  color: #1a1d21;
+  filter: brightness(1.2);
+}
+
+#chat-nav-tooltip {
+  position: fixed;
+  max-width: 300px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #2c2c2e;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 8px;
+  border: 1px solid #e5e5ea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 10000;
+  pointer-events: none;
+  display: none;
+}
+
+#chat-nav-tooltip .nav-tooltip-inner {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+@keyframes nav-flash {
+  0%   { filter: brightness(1); }
+  50%  { filter: brightness(1.45); }
+  100% { filter: brightness(1); }
+}
+
+.nav-flash {
+  animation: nav-flash 0.6s ease !important;
+}
+
+

@@ -1,0 +1,26 @@
+import * as esbuild from 'esbuild'
+
+await esbuild.build({
+  entryPoints: ['renderer/src/main.tsx'],
+  bundle: true,
+  minify: true,
+  sourcemap: true,
+  treeShaking: true,
+  outfile: 'renderer/dist/main.js',
+  platform: 'browser',
+  target: ['chrome120'],
+  tsconfig: 'tsconfig.json',
+  loader: {
+    '.ts': 'tsx',
+    '.tsx': 'tsx',
+    '.png': 'dataurl',
+    '.svg': 'dataurl',
+    '.jpg': 'dataurl',
+    '.jpeg': 'dataurl',
+    '.gif': 'dataurl',
+    '.webp': 'dataurl',
+  },
+  resolveExtensions: ['.tsx', '.ts', '.jsx', '.js'],
+})
+
+console.log('Build completed successfully')

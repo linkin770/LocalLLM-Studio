@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本语 / LocalLLM Studio — Design Preview</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ============================================================
+     Top marketing header
+     ============================================================ -->
+<header class="marketing-header">
+  <div class="marketing-inner">
+    <a class="marketing-brand" href="#app-shell">
+      <span class="marketing-mark"><img src="brand.png" alt="" /></span>
+      <div>
+        <div class="marketing-name">本语 / LocalLLM Studio</div>
+        <div class="marketing-sub">克制、干净、不会打扰你的本地大模型控制台</div>
+      </div>
+    </a>
+    <nav class="marketing-nav">
+      <a href="#app-shell">界面预览</a>
+      <a href="#features">核心功能</a>
+      <a href="#design">设计哲学</a>
+      <a href="#palette">色彩</a>
+      <a href="#typography">字体</a>
+      <a href="#motion">动效</a>
+      <a href="#specs">规格</a>
+    </nav>
+    <div class="marketing-version">v1.1.2026.06.15</div>
+  </div>
+</header>
+
+<!-- ============================================================
+     App Window — 高保真还原
+     ============================================================ -->
+<section class="app-stage" id="app-shell">
+  <div class="app-window" id="appWindow">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <span class="sb-mark"><img src="brand.png" alt="" /></span>
+        <div class="sb-brand-text">
+          <strong>LocalLLM Studio</strong>
+          <span>本地模型对话</span>
+        </div>
+      </div>
+
+      <div class="sb-quicknav" role="tablist" aria-label="视图切换">
+        <button class="sb-quicknav-item is-active" data-view="chat">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5C2.5 3.7 3.2 3 4 3h8c.8 0 1.5.7 1.5 1.5v5c0 .8-.7 1.5-1.5 1.5H6l-2.5 2v-2H4c-.8 0-1.5-.7-1.5-1.5z"/></svg>
+          <span>对话</span>
+        </button>
+        <button class="sb-quicknav-item" data-view="knowledge">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h4a2 2 0 0 1 2 2v7.5M13.5 3.5h-4a2 2 0 0 0-2 2M2.5 3.5v9M13.5 3.5v9"/></svg>
+          <span>知识库</span>
+        </button>
+        <button class="sb-quicknav-item" data-view="settings">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="1.8"/><path d="M13.5 8a5.5 5.5 0 0 0-.1-1l1.2-1-1.3-2.2-1.5.5a5.5 5.5 0 0 0-1.7-1L9.7 2H6.3l-.4 1.3a5.5 5.5 0 0 0-1.7 1L2.7 3.8 1.4 6l1.2 1A5.5 5.5 0 0 0 2.5 8c0 .3 0 .7.1 1l-1.2 1 1.3 2.2 1.5-.5a5.5 5.5 0 0 0 1.7 1l.4 1.3h3.4l.4-1.3a5.5 5.5 0 0 0 1.7-1l1.5.5 1.3-2.2-1.2-1c.1-.3.1-.7.1-1z"/></svg>
+          <span>设置</span>
+        </button>
+      </div>
+
+      <button class="sb-newchat" id="newChatBtn">
+        <span class="sb-newchat-plus">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+        </span>
+        <span class="sb-newchat-label">新对话</span>
+        <span class="sb-newchat-hint">新建</span>
+      </button>
+
+      <div class="sb-search">
+        <svg class="sb-search-icon" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.5"/><path d="M13.5 13.5L10.5 10.5"/></svg>
+        <input id="sessionSearch" type="text" placeholder="搜索会话" />
+      </div>
+
+      <div class="sb-list">
+        <div class="sb-list-header">
+          <span>会话</span><span class="sb-list-count" id="sessionCount">3</span>
+        </div>
+
+        <div class="sb-group" data-open="true">
+          <button class="sb-group-header" data-group="today">
+            <svg class="sb-caret" viewBox="0 0 8 8" width="8" height="8" fill="currentColor"><path d="M2 1l4 3-4 3z"/></svg>
+            <span class="sb-group-label">今天</span>
+            <span class="sb-group-count">2</span>
+          </button>
+          <ul class="sb-items">
+            <li class="sb-item is-active" data-session="s1" data-title="新聊天">
+              <span class="sb-item-icon">
+                <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h7c.8 0 1.5.7 1.5 1.5v5c0 .8-.7 1.5-1.5 1.5H5l-2 1.5v-1.5h-.5C1.7 10 1 9.3 1 8.5z"/></svg>
+              </span>
+              <div class="sb-item-text">
+                <div class="sb-item-title">新聊天</div>
+                <div class="sb-item-meta">刚刚</div>
+              </div>
+              <button class="sb-item-menu" data-session-menu="s1" aria-label="更多">
+                <svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><circle cx="2" cy="6" r="1"/><circle cx="6" cy="6" r="1"/><circle cx="10" cy="6" r="1"/></svg>
+              </button>
+              <div class="sb-menu" data-menu-for="s1">
+                <button>编辑</button>
+                <button>导出</button>
+                <div class="sb-menu-sep"></div>
+                <button class="danger">删除</button>
+              </div>
+            </li>
+            <li class="sb-item" data-session="s3" data-title="解释量子计算">
+              <span class="sb-item-icon">
+                <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5C2 2.7 2.7 2 3.5 2h7c.8 0 1.5.7 1.5 1.5v5c0 .8-.7 1.5-1.5 1.5H5l-2 1.5v-1.5h-.5C1.7 10 1 9.3 1 8.5z"/></svg>
+              </span>
+              <div class="sb-item-text">
+                <div class="sb-item-title">解释量子计算</div>
+                <div class="sb-item-meta">29 分钟前</div>
+              </div>
+              <button class="sb-item-menu" data-session-menu="s3" aria-label="更多">
+                <svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><circle cx="2" cy="6" r="1"/><circle cx="6" cy="6" r="1"/><circle cx="10" cy="6" r="1"/></svg>
+              </button>
+              <div class="sb-menu" data-menu-for="s3">
+                <button>编辑</button>
+                <button>导出</button>
+                <div class="sb-menu-sep"></div>
+                <button class="danger">删除</button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sb-bottom">
+        <button class="sb-status" id="statusBtn">
+          <span class="sb-status-dot" data-state="running"></span>
+          <span class="sb-status-text">
+            <span class="sb-status-name">运行中</span>
+            <span class="sb-status-url">http://127.0.0.1:8080</span>
+          </span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="headerbar">
+        <button class="header-toggle" id="toggleSidebar" aria-label="折叠侧边栏">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 4L6 8L10 12" />
+          </svg>
+        </button>
+        <div class="header-spacer"></div>
+        <div class="header-actions">
+          <button class="window-btn" title="最小化">
+            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><line x1="1" y1="5" x2="9" y2="5"/></svg>
+          </button>
+          <button class="window-btn" title="最大化">
+            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="1.5" width="7" height="7" rx="0.5"/></svg>
+          </button>
+          <button class="window-btn close" title="关闭">
+            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="content" id="content">
+        <!-- Chat (empty) -->
+        <section class="view view-chat view-empty" data-view-panel="chat">
+          <div class="empty-state">
+            <h1>本语 / LocalLLM Studio</h1>
+            <p>无需命令行，就能管理本地 AI 服务。它既是控制台，也是聊天室，更是连接 OpenClaw、Claude Code 等外部工具的桥梁。</p>
+            <div class="prompt-cards">
+              <button class="prompt-card" data-prompt="请帮我审查这段代码：function add(a,b){return a+b}。找出潜在 bug 并给出改进建议。">
+                <span class="prompt-icon">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><path d="M14 14L17 17M6 8h4M8 6v4"/></svg>
+                </span>
+                <div class="prompt-text">
+                  <strong>代码审查</strong>
+                  <span>审查代码，找出潜在 bug 并给出改进建议</span>
+                </div>
+              </button>
+              <button class="prompt-card" data-prompt="请对以下长文进行结构化总结，提炼核心要点。">
+                <span class="prompt-icon">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M6 7h8M6 10h8M6 13h5"/></svg>
+                </span>
+                <div class="prompt-text">
+                  <strong>文章总结</strong>
+                  <span>对长文进行结构化摘要，提炼核心要点</span>
+                </div>
+              </button>
+              <button class="prompt-card" data-prompt="请从下面文本中识别并脱敏手机号、邮箱、身份证等敏感信息。">
+                <span class="prompt-icon">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L3 5v5c0 4 3 7 7 8 4-1 7-4 7-8V5z"/><path d="M7 10l2 2 4-4"/></svg>
+                </span>
+                <div class="prompt-text">
+                  <strong>信息脱敏</strong>
+                  <span>从文本中识别并脱敏手机号、邮箱、身份证等敏感信息</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Knowledge -->
+        <section class="view view-knowledge" data-view-panel="knowledge" hidden>
+          <div class="kb-header">
+            <h2>
+              <svg class="kb-icon" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h4a2 2 0 0 1 2 2v7.5M13.5 3.5h-4a2 2 0 0 0-2 2M2.5 3.5v9M13.5 3.5v9"/></svg>
+              知识库
+            </h2>
+            <button class="btn-secondary kb-back">返回聊天</button>
+          </div>
+          <div class="kb-toolbar">
+            <button class="btn-primary" id="kbUpload">
+              <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10V3M3 7l4-4 4 4"/><path d="M2 12h10"/></svg>
+              <span>上传文档</span>
+            </button>
+            <button class="btn-secondary">
+              <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5a1.4 1.4 0 1 1 2 2L5 13l-3 .5.5-3z"/></svg>
+              <span>刷新</span>
+            </button>
+          </div>
+          <div class="kb-summary">共 <b id="kbDocCount">1</b> 个文档，<b id="kbReadyCount">1</b> 个就绪，<b id="kbChunkCount">1</b> 个文本块</div>
+          <div class="kb-doc-list">
+            <div class="kb-doc-item">
+              <span class="kb-doc-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5h5l3 3V12a.5.5 0 0 1-.5.5h-7A.5.5 0 0 1 3 12z"/><path d="M8 1.5V4.5h3"/></svg>
+              </span>
+              <div class="kb-doc-info">
+                <div class="kb-doc-name">本语 LocalLLM Studio 说明文档.docx</div>
+                <div class="kb-doc-meta">10.0 KB · 刚刚 · 1 个文本块</div>
+              </div>
+              <div class="kb-doc-actions">
+                <span class="kb-doc-status">
+                  <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>
+                  就绪
+                </span>
+                <button class="kb-doc-delete" title="删除">
+                  <svg viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h9M5 4V2.5h4V4M3.5 4l.5 8h6l.5-8"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="view view-settings" data-view-panel="settings" hidden>
+          <aside class="settings-side">
+            <button class="settings-nav-item is-active" data-settings="overview">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="1.5"/><path d="M12 7c0-.3 0-.5-.1-.7l1-1-1-1.7-1.3.4a4 4 0 0 0-1.3-.7L9 2H7l-.3 1.3a4 4 0 0 0-1.3.7L4 3.6 3 5.3l1 1c0 .2-.1.4-.1.7 0 .2 0 .5.1.7l-1 1 1 1.7 1.3-.4a4 4 0 0 0 1.3.7L7 12h2l.3-1.3a4 4 0 0 0 1.3-.7l1.3.4 1-1.7-1-1c0-.2.1-.4.1-.7z"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>概览</strong><small>服务入口与基础运行信息</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="display">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="7" rx="1"/><path d="M4.5 12.5h5M7 9.5v3"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>展示</strong><small>模型标签、模板与显示项</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="skill">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 1.5h4l-1 4 2 1-3 6-1-5-2 1z"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>技能</strong><small>管理自定义技能提示词</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="sampling">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8V4M5 11V3M8 11V6M11 11V2"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>采样与惩罚</strong><small>温度、Top-K/P、重复与 DRY</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="mcp">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5L2 7l3 2M9 5l3 2-3 2M8 4l-2 6"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>MCP</strong><small>预留扩展和工具接入</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="developer">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 1.5h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zM5 4l-1 1 1 1M9 4l1 1-1 1M6 8h2"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>开发者</strong><small>线程、GPU 与批处理</small></span>
+            </button>
+            <button class="settings-nav-item" data-settings="logs">
+              <span class="settings-nav-icon">
+                <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="10" height="10" rx="1"/><path d="M4 5h6M4 7h6M4 9h4"/></svg>
+              </span>
+              <span class="settings-nav-text"><strong>日志</strong><small>实时查看 llama-server 输出</small></span>
+            </button>
+          </aside>
+          <div class="settings-main">
+            <div class="settings-section">
+              <div class="settings-section-head">
+                <h3>当前接入状态</h3>
+                <p>这里集中放服务入口、上下文和启动模式。</p>
+              </div>
+              <div class="status-grid">
+                <div class="status-card">
+                  <span class="status-card-name">配置文件</span>
+                  <span class="status-badge ok">就绪</span>
+                </div>
+                <div class="status-card">
+                  <span class="status-card-name">启动器</span>
+                  <span class="status-badge ok">就绪</span>
+                </div>
+                <div class="status-card">
+                  <span class="status-card-name">llama-server</span>
+                  <span class="status-badge ok">就绪</span>
+                </div>
+                <div class="status-card">
+                  <span class="status-card-name">模型文件</span>
+                  <span class="status-badge ok">就绪</span>
+                </div>
+                <div class="status-card">
+                  <span class="status-card-name">保存状态</span>
+                  <span class="status-badge muted">已保存</span>
+                </div>
+              </div>
+              <div class="endpoint-card">
+                <div class="endpoint-label">OPENAI BASE URL</div>
+                <code class="endpoint-url">http://127.0.0.1:8080/v1</code>
+              </div>
+              <div class="endpoint-card">
+                <div class="endpoint-label">CHAT COMPLETIONS</div>
+                <code class="endpoint-url">http://127.0.0.1:8080/v1/chat/completions</code>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-head">
+                <h3>运行参数</h3>
+                <p>桌面端直连 llama.cpp 时，这一组就是最常用的核心参数。</p>
+              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>启动方式</label>
+                  <select class="form-control">
+                    <option>direct</option>
+                    <option>launcher</option>
+                  </select>
+                  <p class="form-hint">direct = 直接调用 llama-server.exe；launcher = 兼容旧启动器</p>
+                </div>
+                <div class="form-field">
+                  <label>llama.cpp 原始目录</label>
+                  <div class="form-input-with-actions">
+                    <input class="form-control" value="E:\AiChatbox\llama" readonly />
+                    <button class="btn-danger-text">清除</button>
+                    <button class="btn-secondary-sm">选择</button>
+                  </div>
+                  <p class="form-hint">选择包含 llama-server.exe 和 CUDA / ggml DLL 的原始目录。</p>
+                </div>
+                <div class="form-field form-field-half">
+                  <label>HOST</label>
+                  <input class="form-control" value="0.0.0.0" />
+                </div>
+                <div class="form-field form-field-half">
+                  <label>PORT</label>
+                  <input class="form-control" value="8080" />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-secondary">保存</button>
+                <button class="btn-primary">完成</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chat with messages -->
+        <section class="view view-chat-with-msgs" data-view-panel="chat-with-msgs" hidden>
+          <div class="chat-feed" id="chatFeed">
+            <div class="chat-msg user">
+              <div class="chat-msg-bubble">解释量子计算</div>
+              <span class="chat-msg-avatar user">你</span>
+            </div>
+            <div class="chat-msg assistant">
+              <span class="chat-msg-avatar ai">
+                <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>
+              </span>
+              <div class="chat-msg-body">
+                <p>量子计算是一种基于量子力学原理的新信息处理范式，利用量子系统（如量子比特或量子位）的叠加和干涉特性，实现对复杂问题的高效计算。以下是量子计算的核心解释：</p>
+                <ol>
+                  <li><strong>量子比特（Qubit）</strong>：<br>传统计算机使用比特（bit），只能处于 0 或 1 的状态。而量子比特（qubit）可以同时存在于 0 和 1 的状态上，利用叠加原理，能实现并行计算。</li>
+                  <li><strong>量子纠缠</strong>：<br>量子比特之间可以通过量子纠缠相互关联，即使相隔遥远，状态却能瞬间影响对方，这种非局域的关联性是经典计算机无法实现的。</li>
+                  <li><strong>量子叠加</strong>：<br>qubit 可以处于多个状态的叠加，例如 0 和 1 的混合态，这使得计算过程不再是线性的，而是可以同时处理多种可能性。</li>
+                  <li><strong>量子干涉</strong>：<br>量子系统的波函数会通过干涉现象强化或消减某些状态的概率，导致计算结果的非随机性，有助于揭示隐藏的规律。</li>
+                  <li><strong>量子算法</strong>：<br>如 Shor 算法、Grover 算法等，利用量子优势解决经典计算机难以解决的难题，如整数分解和加密破解。</li>
+                  <li><strong>应用场景</strong>：<br>量子计算在密码学、优化问题、材料科学等领域展现出潜在优势，但随着量子纠错技术和规模限制，当前仍面临挑战。</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="composer-wrap" id="composer">
+        <div class="composer">
+          <div class="composer-attach">
+            <button class="attach-btn" title="附件">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+            </button>
+            <button class="attach-btn" title="图片">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l-5 5a2 2 0 1 0 2.83 2.83L11 6.66a4 4 0 1 0-5.66-5.66L2 4.5"/></svg>
+            </button>
+            <button class="attach-btn" title="提示词">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h4l-1 4 2 1-3 7-1-5-2 1z"/></svg>
+            </button>
+          </div>
+          <textarea class="composer-textarea" id="composerText" placeholder="输入一条消息……" rows="2"></textarea>
+          <div class="composer-meta">
+            <div class="model-chip" id="modelChip">
+              <span class="model-dot">
+                <svg viewBox="0 0 8 8" width="6" height="6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l2 2 3-4"/></svg>
+              </span>
+              <span class="model-name">MiniCPM-V-4_6-Q4_K_M.gguf</span>
+            </div>
+            <button class="send-btn" id="sendBtn" aria-label="发送">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3 8l5-5 5 5"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="composer-hint">按住 Enter 发送，Shift + Enter 换行</div>
+      </footer>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Features
+     ============================================================ -->
+<section class="features" id="features">
+  <div class="features-head">
+    <p class="eyebrow">FEATURES</p>
+    <h2>三件事，做到极致</h2>
+  </div>
+  <div class="features-grid">
+    <article class="feature">
+      <div class="feature-num">01</div>
+      <h3>跑服务</h3>
+      <p>启动 / 停止 llama-server，健康检查，实时日志。系统托盘后台运行，最小化后服务继续工作。</p>
+    </article>
+    <article class="feature">
+      <div class="feature-num">02</div>
+      <h3>聊模型</h3>
+      <p>内置流式聊天界面。Markdown、代码高亮、上下文使用率环形进度、每会话独立提示词。</p>
+    </article>
+    <article class="feature">
+      <div class="feature-num">03</div>
+      <h3>接外部</h3>
+      <p>标准 <code>/v1/chat/completions</code> 流式接口。Claude Code、OpenClaw、任何 OpenAI 客户端直接连。</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============================================================
+     Design philosophy
+     ============================================================ -->
+<section class="design" id="design">
+  <div class="design-head">
+    <p class="eyebrow">DESIGN PHILOSOPHY</p>
+    <h2>克制，是最高级的清晰</h2>
+    <p class="design-lede">三个原则贯穿整个产品。我们不堆功能，也不学 macOS 的皮毛，而是让设计真正服务于本地大模型这一具体场景。</p>
+  </div>
+  <div class="design-pillars">
+    <div class="pillar">
+      <div class="pillar-num">I</div>
+      <h3>Clarity</h3>
+      <p class="pillar-sub">清晰</p>
+      <p>UI 退后，模型输出是绝对主角。每一个像素的留白都经过计算，让用户的注意力停留在真正重要的地方。</p>
+      <ul class="pillar-list">
+        <li>无装饰性渐变</li>
+        <li>无多余边框与阴影</li>
+        <li>字号阶距 1.25× 严格比例</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <div class="pillar-num">II</div>
+      <h3>Deference</h3>
+      <p class="pillar-sub">退让</p>
+      <p>界面服务于内容，从不与之竞争。系统级字体、系统级颜色，让操作台自然融入 Windows 桌面环境。</p>
+      <ul class="pillar-list">
+        <li>SF Pro 优先，MiSans 兜底</li>
+        <li>系统级滚动条与焦点环</li>
+        <li>不抢焦点的次要操作</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <div class="pillar-num">III</div>
+      <h3>Depth</h3>
+      <p class="pillar-sub">层次</p>
+      <p>用极克制的层次区分元素。1px hairline、4px 阴影、3px 透明 ring，构建可触摸的视觉深度。</p>
+      <ul class="pillar-list">
+        <li>三层灰阶：0.04 / 0.08 / 0.12</li>
+        <li>backdrop-filter 仅用于顶栏</li>
+        <li>动效 240ms cubic-bezier ease-out</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Palette
+     ============================================================ -->
+<section class="palette-section" id="palette">
+  <div class="palette-head">
+    <p class="eyebrow">COLOR</p>
+    <h2>色彩</h2>
+    <p class="design-lede">主色系统由 4 组语义色阶组成，每组 5 个递进。绿色仅用于成功状态，不做装饰。</p>
+  </div>
+  <div class="palette-grid">
+    <div class="palette-ramp">
+      <h4>INK · 墨色</h4>
+      <div class="ramp">
+        <div class="ramp-swatch" style="background:#08090a"></div>
+        <div class="ramp-swatch" style="background:#1d1d1f"></div>
+        <div class="ramp-swatch" style="background:#424245"></div>
+        <div class="ramp-swatch" style="background:#86868b"></div>
+        <div class="ramp-swatch" style="background:#b8b8be"></div>
+      </div>
+      <div class="ramp-meta">
+        <code>#08090a</code> · <code>#1d1d1f</code> · <code>#424245</code> · <code>#86868b</code> · <code>#b8b8be</code>
+      </div>
+    </div>
+    <div class="palette-ramp">
+      <h4>BG · 底色</h4>
+      <div class="ramp">
+        <div class="ramp-swatch" style="background:#ffffff;border:1px solid rgba(0,0,0,0.08)"></div>
+        <div class="ramp-swatch" style="background:#fafafa;border:1px solid rgba(0,0,0,0.08)"></div>
+        <div class="ramp-swatch" style="background:#f5f5f7;border:1px solid rgba(0,0,0,0.08)"></div>
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.06)"></div>
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.04)"></div>
+      </div>
+      <div class="ramp-meta">
+        <code>#ffffff</code> · <code>#fafafa</code> · <code>#f5f5f7</code> · <code>4% black</code> · <code>6% black</code>
+      </div>
+    </div>
+    <div class="palette-ramp">
+      <h4>LINE · 描边</h4>
+      <div class="ramp">
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.04)"></div>
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.08)"></div>
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.12)"></div>
+        <div class="ramp-swatch" style="background:rgba(0,0,0,0.20)"></div>
+        <div class="ramp-swatch" style="background:#000"></div>
+      </div>
+      <div class="ramp-meta">
+        <code>4%</code> · <code>8%</code> · <code>12%</code> · <code>20%</code> · <code>100%</code>
+      </div>
+    </div>
+    <div class="palette-ramp">
+      <h4>STATUS · 状态</h4>
+      <div class="ramp">
+        <div class="ramp-swatch" style="background:#22c55e"></div>
+        <div class="ramp-swatch" style="background:#f59e0b"></div>
+        <div class="ramp-swatch" style="background:#dc2626"></div>
+        <div class="ramp-swatch" style="background:#0071e3"></div>
+        <div class="ramp-swatch" style="background:#8b5cf6"></div>
+      </div>
+      <div class="ramp-meta">
+        <code>success</code> · <code>starting</code> · <code>danger</code> · <code>link</code> · <code>accent</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Typography
+     ============================================================ -->
+<section class="typo-section" id="typography">
+  <div class="typo-head">
+    <p class="eyebrow">TYPOGRAPHY</p>
+    <h2>字体</h2>
+    <p class="design-lede">系统级字体优先，零下载零等待。中英混排时自动选择 SF Pro 与 PingFang SC，让两种语言读起来都自然。</p>
+  </div>
+  <div class="typo-stack">
+    <div class="typo-row">
+      <div class="typo-meta">
+        <code>SF Pro Display · 600</code>
+        <span>Hero · 32px / 1.2</span>
+      </div>
+      <div class="typo-sample hero">本语 / LocalLLM Studio</div>
+    </div>
+    <div class="typo-row">
+      <div class="typo-meta">
+        <code>SF Pro Display · 600</code>
+        <span>Title · 18px / 1.3</span>
+      </div>
+      <div class="typo-sample title">三件事，做到极致</div>
+    </div>
+    <div class="typo-row">
+      <div class="typo-meta">
+        <code>SF Pro Text · 400</code>
+        <span>Body · 14px / 1.6</span>
+      </div>
+      <div class="typo-sample body">内置流式聊天界面。Markdown、代码高亮、上下文使用率环形进度、每会话独立提示词。</div>
+    </div>
+    <div class="typo-row">
+      <div class="typo-meta">
+        <code>SF Pro Text · 500</code>
+        <span>Caption · 12px / 1.4</span>
+      </div>
+      <div class="typo-sample caption">按住 Enter 发送，Shift + Enter 换行</div>
+    </div>
+    <div class="typo-row">
+      <div class="typo-meta">
+        <code>SF Mono · 400</code>
+        <span>Mono · 12px</span>
+      </div>
+      <div class="typo-sample mono">llama-server -m model.gguf --port 8080 -c 32768</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Motion
+     ============================================================ -->
+<section class="motion-section" id="motion">
+  <div class="motion-head">
+    <p class="eyebrow">MOTION</p>
+    <h2>动效</h2>
+    <p class="design-lede">ease-out · 短时延 · 透明变换。不用弹跳，不用弹性，不抢用户注意力。</p>
+  </div>
+  <div class="motion-grid">
+    <div class="motion-card">
+      <div class="motion-vis">
+        <div class="motion-dot fade-up"></div>
+      </div>
+      <div class="motion-meta">
+        <strong>fadeUp</strong>
+        <code>opacity + translateY 12px → 0</code>
+        <span>600ms · ease-out</span>
+      </div>
+    </div>
+    <div class="motion-card">
+      <div class="motion-vis">
+        <div class="motion-chip scale-press" id="motionPress">按我</div>
+      </div>
+      <div class="motion-meta">
+        <strong>scale(0.97)</strong>
+        <code>按下反馈</code>
+        <span>100ms · ease-out</span>
+      </div>
+    </div>
+    <div class="motion-card">
+      <div class="motion-vis">
+        <div class="motion-pulse"></div>
+      </div>
+      <div class="motion-meta">
+        <strong>pulse</strong>
+        <code>绿点状态指示</code>
+        <span>2.4s · ease-in-out</span>
+      </div>
+    </div>
+    <div class="motion-card">
+      <div class="motion-vis">
+        <div class="motion-arrow" id="motionArrow">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </div>
+      </div>
+      <div class="motion-meta">
+        <strong>arrow 120ms</strong>
+        <code>chevron 旋转</code>
+        <span>悬停与展开</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Specs
+     ============================================================ -->
+<section class="specs" id="specs">
+  <div class="specs-head">
+    <p class="eyebrow">SPECS</p>
+    <h2>技术规格</h2>
+    <p class="design-lede">从底层依赖到模块拆分，整理自 README。克制不是简陋，是把每一处都说明白。</p>
+  </div>
+
+  <!-- 技术栈 -->
+  <div class="specs-block">
+    <h3 class="specs-block-title">技术栈</h3>
+    <p class="specs-block-sub">核心依赖与版本（与 <code>package.json</code> 保持一致）</p>
+    <div class="specs-grid">
+      <div class="spec-card">
+        <div class="spec-card-name">Electron</div>
+        <div class="spec-card-ver">41.1.1</div>
+        <div class="spec-card-note">跨平台桌面应用框架</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">React</div>
+        <div class="spec-card-ver">^19.2.6</div>
+        <div class="spec-card-note">UI 框架</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">TypeScript</div>
+        <div class="spec-card-ver">^6.0.3</div>
+        <div class="spec-card-note">类型安全</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">Ant Design X</div>
+        <div class="spec-card-ver">^2.7.0</div>
+        <div class="spec-card-note">对话 UI 组件库</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">esbuild</div>
+        <div class="spec-card-ver">^0.28.0</div>
+        <div class="spec-card-note">渲染进程构建</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">electron-builder</div>
+        <div class="spec-card-ver">26.8.1</div>
+        <div class="spec-card-note">打包工具</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">pdf-parse</div>
+        <div class="spec-card-ver">^1.1.1</div>
+        <div class="spec-card-note">PDF 文本提取</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">word-extractor</div>
+        <div class="spec-card-ver">^1.0.4</div>
+        <div class="spec-card-note">Word 文档解析</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-name">xlsx</div>
+        <div class="spec-card-ver">^0.18.5</div>
+        <div class="spec-card-note">Excel 表格解析</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 系统要求 -->
+  <div class="specs-block">
+    <h3 class="specs-block-title">系统要求</h3>
+    <p class="specs-block-sub">运行本语 / LocalLLM Studio 所需的最低与建议配置</p>
+    <dl class="specs-list">
+      <div class="specs-row"><dt>操作系统</dt><dd>Windows 10 / 11 (64 位)</dd></div>
+      <div class="specs-row"><dt>Node.js</dt><dd>&gt;= 18.0.0</dd></div>
+      <div class="specs-row"><dt>内存</dt><dd>建议 &gt;= 16 GB（视模型大小而定）</dd></div>
+      <div class="specs-row"><dt>GPU</dt><dd>可选，支持 CUDA / Vulkan 加速</dd></div>
+      <div class="specs-row"><dt>平台支持</dt><dd>Windows 10 / 11</dd></div>
+      <div class="specs-row"><dt>License</dt><dd>MIT</dd></div>
+    </dl>
+  </div>
+
+  <!-- 运行参数 -->
+  <div class="specs-block">
+    <h3 class="specs-block-title">运行参数</h3>
+    <p class="specs-block-sub">llama-server 关键参数默认值，可在「采样与惩罚」「开发者」面板调整</p>
+    <dl class="specs-list">
+      <div class="specs-row"><dt>host</dt><dd>0.0.0.0</dd></div>
+      <div class="specs-row"><dt>port</dt><dd>8080</dd></div>
+      <div class="specs-row"><dt>ctx_size</dt><dd>32768</dd></div>
+      <div class="specs-row"><dt>n_predict</dt><dd>-1（不限制）</dd></div>
+      <div class="specs-row"><dt>n_gpu_layers</dt><dd>99（尽量卸载到 GPU）</dd></div>
+      <div class="specs-row"><dt>temp</dt><dd>0.8</dd></div>
+      <div class="specs-row"><dt>top_p</dt><dd>0.95</dd></div>
+      <div class="specs-row"><dt>top_k</dt><dd>20</dd></div>
+      <div class="specs-row"><dt>mmproj</dt><dd>—（可选，视觉投影）</dd></div>
+    </dl>
+  </div>
+
+  <!-- 开发命令 -->
+  <div class="specs-block">
+    <h3 class="specs-block-title">开发命令</h3>
+    <p class="specs-block-sub">源码运行 / 构建 / 打包的核心 npm scripts</p>
+    <div class="cmd-grid">
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>npm start</code><span>开发模式</span></div>
+        <div class="cmd-desc">构建渲染进程并启动 Electron</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>npm run build</code><span>仅构建</span></div>
+        <div class="cmd-desc">只跑 esbuild，生成 renderer/dist</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>npm run dist</code><span>打包</span></div>
+        <div class="cmd-desc">electron-builder 输出便携版</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>npx tsc --noEmit</code><span>类型检查</span></div>
+        <div class="cmd-desc">不输出文件，仅做类型校验</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>npm test</code><span>运行测试</span></div>
+        <div class="cmd-desc">触发 package.json 中的 test 钩子</div>
+      </div>
+      <div class="cmd-card">
+        <div class="cmd-meta"><code>git clone … &amp;&amp; npm install</code><span>源码运行</span></div>
+        <div class="cmd-desc">克隆后安装依赖，准备 llama.cpp 即可启动</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模块架构 -->
+  <div class="specs-block">
+    <h3 class="specs-block-title">模块架构</h3>
+    <p class="specs-block-sub">主进程 / 渲染进程 / 工具层 三段式拆分，职责单一</p>
+    <div class="arch-grid">
+      <div class="arch-card">
+        <div class="arch-head"><span class="arch-tag">DESKTOP</span><span>Electron 主进程</span></div>
+        <ul class="arch-list">
+          <li><code>main.mjs</code> · 模块装配 + 生命周期</li>
+          <li><code>preload.cjs</code> · 渲染进程桥接</li>
+          <li><code>core/</code> · app-state / config / window</li>
+          <li><code>ipc/</code> · chat / knowledge / model / server / skill</li>
+          <li><code>tray/</code> · 系统托盘后台运行</li>
+          <li><code>utils/</code> · file / model / server-args / tfidf / chunker</li>
+        </ul>
+      </div>
+      <div class="arch-card">
+        <div class="arch-head"><span class="arch-tag">RENDERER</span><span>React 渲染进程</span></div>
+        <ul class="arch-list">
+          <li><code>App.tsx</code> · 主应用与状态</li>
+          <li><code>components/</code> · ChatScreen / Sidebar / Settings / KB / TabBar / Modal / Toast</li>
+          <li><code>primitives/</code> · 设计系统原语</li>
+          <li><code>hooks/useAppState.ts</code> · 全局状态</li>
+          <li><code>styles/</code> · variables + 模块化拆分（10+ 文件）</li>
+          <li><code>dist/</code> · esbuild 产物</li>
+        </ul>
+      </div>
+      <div class="arch-card">
+        <div class="arch-head"><span class="arch-tag">RESOURCES</span><span>数据与资源</span></div>
+        <ul class="arch-list">
+          <li><code>llama/</code> · llama.cpp 编译产物（需自备）</li>
+          <li><code>models/</code> · GGUF 模型文件</li>
+          <li><code>data/knowledge/</code> · 知识库文档与索引</li>
+          <li><code>skills/</code> · SKILL.md 技能存储</li>
+          <li><code>assets/</code> · 图标 / 托盘 / 字体</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>本语 · LocalLLM Studio</span>
+    <span>基于 llama.cpp 的克制桌面端 · 2026</span>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

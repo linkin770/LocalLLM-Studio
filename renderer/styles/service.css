@@ -1,0 +1,36 @@
+.service-bar {
+  position: relative;
+  border-top: 1px solid var(--line);
+  min-height: 72px;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--bg);
+  backdrop-filter: blur(12px);
+  min-width: 0;
+  width: 100%;
+}
+
+.service-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.service-left code {
+  color: var(--ink);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "SF Mono", Monaco, "Cascadia Code", Consolas, "Roboto Mono", monospace;
+  font-size: 12px;
+}

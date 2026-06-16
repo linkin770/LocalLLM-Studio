@@ -1,0 +1,35 @@
+# ---------- Build / dependencies ----------
+node_modules/*
+!node_modules/.gitkeep
+renderer/dist/*
+!renderer/dist/.gitkeep
+
+# ---------- User binaries (downloaded separately) ----------
+llama/*
+!llama/.gitkeep
+models/*
+!models/.gitkeep
+
+# ---------- User content (per-session) ----------
+skills/*
+!skills/.gitkeep
+data/knowledge/documents/*
+
+# ---------- Internal / IDE ----------
+.codeartsdoer/
+.arts/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs ----------
+*.log
+
+# ---------- 本次不推送 ----------
+BUGS_zh.md
+12151187_4877099.svg

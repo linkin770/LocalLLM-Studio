@@ -1,0 +1,72 @@
+.app-shell {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 288px minmax(0, 1fr);
+  background: var(--bg);
+  transition: grid-template-columns 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.sidebar {
+  min-height: 0;
+  background: var(--sidebar);
+  padding: 20px 16px 16px;
+  display: grid;
+  grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) auto;
+  gap: 8px;
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+  transition: opacity 160ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), padding 180ms ease, border-color 180ms ease;
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-16px);
+  padding-left: 0;
+  padding-right: 0;
+  border-right-color: transparent;
+}
+
+.brand-row {
+  display: none;
+}
+
+.app-mark {
+  display: none;
+}
+
+.brand-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.brand-copy strong {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.brand-copy span {
+  color: var(--muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.main-area {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+  height: 100%;
+}

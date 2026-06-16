@@ -1,0 +1,204 @@
+@font-face {
+  font-family: 'MiSans';
+  src: url('../assets/fonts/MiSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans';
+  src: url('../assets/fonts/MiSans-Bold.ttf') format('truetype');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Latin';
+  src: url('../assets/fonts/MiSansLatin-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Latin';
+  src: url('../assets/fonts/MiSansLatin-Bold.ttf') format('truetype');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ----- Existing legacy tokens (kept for backwards compat) ----- */
+  --bg: #FAFAFA;
+  --sidebar: #F4F4F5;
+  --surface: #FFFFFF;
+  --surface-soft: #F4F4F5;
+  --ink: #08090A;
+  --muted: rgba(8, 9, 10, 0.62);
+  --line: rgba(8, 9, 10, 0.06);
+  --line-strong: rgba(8, 9, 10, 0.10);
+  --green: #08090A;
+  --green-soft: rgba(8, 9, 10, 0.04);
+  --green-line: rgba(8, 9, 10, 0.14);
+  --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, 0.08);
+  --pending: #B45309;
+  --pending-soft: rgba(180, 83, 9, 0.08);
+  --shadow: 0 4px 12px rgba(8, 9, 10, 0.06), 0 1px 3px rgba(8, 9, 10, 0.04);
+  --shadow-sm: 0 1px 2px rgba(8, 9, 10, 0.04);
+  --shadow-md: 0 4px 12px rgba(8, 9, 10, 0.06), 0 1px 3px rgba(8, 9, 10, 0.04);
+  --shadow-lg: 0 8px 24px rgba(8, 9, 10, 0.08), 0 2px 6px rgba(8, 9, 10, 0.05);
+  --shadow-xl: 0 24px 64px -12px rgba(8, 9, 10, 0.18), 0 8px 16px -8px rgba(8, 9, 10, 0.08);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --font-family: "MiSans", "MiSans Latin", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  --font-serif: "Source Serif Pro", "Songti SC", Georgia, "Times New Roman", serif;
+  --code-bg: #F6F8FA;
+  --code-border: rgba(8, 9, 10, 0.10);
+  --code-text: #24292F;
+  --code-inline-bg: rgba(8, 9, 10, 0.05);
+  --code-inline-text: #CF222E;
+  --code-keyword: #CF222E;
+  --code-string: #0A3069;
+  --code-comment: #6E7781;
+  --code-function: #8250DF;
+  --code-number: #0550AE;
+  --code-operator: #CF222E;
+  --code-class: #953800;
+
+  /* ----- v2 design tokens (alpha-based palette) ----- */
+  --bg-base: #FAFAFA;
+  --bg-canvas: #F4F4F5;
+  --bg-sidebar: #F4F4F5;
+  --bg-elev: rgba(255, 255, 255, 0.72);
+  --bg-tint: rgba(8, 9, 10, 0.02);
+
+  --ink-1: #08090A;
+  --ink-2: rgba(8, 9, 10, 0.62);
+  --ink-3: rgba(8, 9, 10, 0.36);
+  --ink-4: rgba(8, 9, 10, 0.20);
+  --ink-on-accent: #FFFFFF;
+
+  --line-faint: rgba(8, 9, 10, 0.04);
+  --line-base: rgba(8, 9, 10, 0.06);
+  --line-strong: rgba(8, 9, 10, 0.10);
+  --line-emph: rgba(8, 9, 10, 0.16);
+
+  --hover: rgba(8, 9, 10, 0.04);
+  --active: rgba(8, 9, 10, 0.06);
+  --selected: rgba(8, 9, 10, 0.05);
+
+  /* pure gray accent — no chromatic color */
+  --accent: #08090A;
+  --accent-hover: #1F2126;
+  --accent-press: #000000;
+  --accent-soft: rgba(8, 9, 10, 0.06);
+  --accent-line: rgba(8, 9, 10, 0.14);
+
+  /* semantic (refined) */
+  --success: #0F8A4F;
+  --success-soft: rgba(15, 138, 79, 0.10);
+  --warning: #B45309;
+  --warning-soft: rgba(180, 83, 9, 0.10);
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* focus */
+  --sh-focus: 0 0 0 3px rgba(8, 9, 10, 0.12);
+
+  /* layout */
+  --sidebar-w: 256px;
+  --detail-w: 320px;
+  --topbar-h: 48px;
+  --content-max: 760px;
+}
+
+.dark-mode {
+  /* surface */
+  --bg: #0F0F10;
+  --bg-base: #0F0F10;
+  --sidebar: #131316;
+  --bg-sidebar: #131316;
+  --bg-canvas: #131316;
+  --surface: #1A1A1C;
+  --surface-soft: #131316;
+  --bg-elev: rgba(26, 26, 28, 0.72);
+  --bg-tint: rgba(255, 255, 255, 0.02);
+
+  /* text */
+  --ink: #F5F5F6;
+  --ink-1: #F5F5F6;
+  --ink-2: rgba(255, 255, 255, 0.62);
+  --ink-3: rgba(255, 255, 255, 0.36);
+  --ink-4: rgba(255, 255, 255, 0.20);
+  --ink-on-accent: #0F0F10;
+  --muted: rgba(255, 255, 255, 0.50);
+
+  /* lines */
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.10);
+  --line-faint: rgba(255, 255, 255, 0.04);
+  --line-base: rgba(255, 255, 255, 0.06);
+  --line-emph: rgba(255, 255, 255, 0.16);
+
+  /* interaction */
+  --hover: rgba(255, 255, 255, 0.04);
+  --active: rgba(255, 255, 255, 0.06);
+  --selected: rgba(255, 255, 255, 0.05);
+
+  /* accent (inverted) */
+  --accent: #F5F5F6;
+  --accent-hover: #E5E5E6;
+  --accent-press: #FFFFFF;
+  --accent-soft: rgba(255, 255, 255, 0.06);
+  --accent-line: rgba(255, 255, 255, 0.14);
+
+  /* green (now used as neutral "ready") */
+  --green: #F5F5F6;
+  --green-soft: rgba(255, 255, 255, 0.04);
+  --green-line: rgba(255, 255, 255, 0.14);
+
+  /* shadows (deeper) */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 24px 64px -12px rgba(0, 0, 0, 0.60), 0 8px 16px -8px rgba(0, 0, 0, 0.40);
+
+  /* focus (soft halo inverted) */
+  --sh-focus: 0 0 0 1px #F5F5F6, 0 0 0 5px rgba(255, 255, 255, 0.04);
+
+  /* code (GitHub Dark) */
+  --code-bg: #161618;
+  --code-border: rgba(255, 255, 255, 0.10);
+  --code-text: #E6EDF3;
+  --code-inline-bg: rgba(255, 255, 255, 0.08);
+  --code-inline-text: #FF7B72;
+  --code-keyword: #FF7B72;
+  --code-string: #A5D6FF;
+  --code-comment: #8B949E;
+  --code-function: #D2A8FF;
+  --code-number: #79C0FF;
+  --code-operator: #FF7B72;
+  --code-class: #FFA657;
+
+  /* semantic (brightened for dark bg) */
+  --success: #3FB950;
+  --success-soft: rgba(63, 185, 80, 0.14);
+  --warning: #D29922;
+  --warning-soft: rgba(210, 153, 34, 0.14);
+  --danger: #F85149;
+  --danger-soft: rgba(248, 81, 73, 0.14);
+  --pending: #D29922;
+  --pending-soft: rgba(210, 153, 34, 0.14);
+}
